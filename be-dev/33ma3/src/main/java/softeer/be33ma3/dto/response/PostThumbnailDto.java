@@ -1,6 +1,5 @@
 package softeer.be33ma3.dto.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import softeer.be33ma3.domain.Image;
@@ -15,33 +14,23 @@ import static softeer.be33ma3.utils.StringParser.stringCommaParsing;
 
 @Getter
 @Builder
-@Schema(description = "게시글 목록 미리보기 응답 DTO")
 public class PostThumbnailDto {
-    @Schema(description = "게시글 아이디", example = "1")
     private Long postId;
 
-    @Schema(description = "작성자 아이디", example = "1")
     private Long writerId;
 
-    @Schema(description = "모델명", example = "제네시스")
     private String modelName;
 
-    @Schema(description = "게시글 생성 시간 문자열", example = "2024.02.06")
     private String createTime;
 
-    @Schema(description = "남은 기한", example = "3")
     private int dDay;
 
-    @Schema(description = "이미지 url 리스트", example = "[aaa.png, bbb.png]")
     private List<String> imageList;
 
-    @Schema(description = "수리 서비스 리스트", example = "[깨짐, 기스]")
     private List<String> repairList;
 
-    @Schema(description = "정비 서비스 리스트", example = "[타이어 교체, 오일 교체]")
     private List<String> tuneUpList;
 
-    @Schema(description = "댓글 개수", example = "1")
     private int offerCount;
 
     // Post Entity -> PostThumbnailDto 변환
