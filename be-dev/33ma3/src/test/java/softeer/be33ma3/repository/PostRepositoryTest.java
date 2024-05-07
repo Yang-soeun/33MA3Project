@@ -9,8 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.domain.Post;
 import softeer.be33ma3.dto.request.PostCreateDto;
-import softeer.be33ma3.repository.MemberRepository;
-import softeer.be33ma3.repository.PostRepository;
 
 import java.util.ArrayList;
 import java.util.List;

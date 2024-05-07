@@ -8,9 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.*;
-import softeer.be33ma3.repository.ChatMessageRepository;
-import softeer.be33ma3.repository.ChatRoomRepository;
-import softeer.be33ma3.repository.MemberRepository;
 
 import java.util.List;
 

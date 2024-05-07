@@ -9,8 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.ChatRoom;
 import softeer.be33ma3.domain.Member;
-import softeer.be33ma3.repository.ChatRoomRepository;
-import softeer.be33ma3.repository.MemberRepository;
 
 import java.util.List;
 

@@ -3,7 +3,6 @@ package softeer.be33ma3.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import softeer.be33ma3.domain.Post;
 import softeer.be33ma3.domain.PostPerCenter;
 
 import java.util.List;

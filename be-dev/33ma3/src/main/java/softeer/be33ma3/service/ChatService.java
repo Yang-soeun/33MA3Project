@@ -1,6 +1,5 @@
 package softeer.be33ma3.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,6 @@ import static softeer.be33ma3.exception.ErrorCode.*;
 @Slf4j
 @Transactional(readOnly = true)
 public class ChatService {
-    private final ObjectMapper objectMapper;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final PostRepository postRepository;

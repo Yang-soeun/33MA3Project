@@ -11,9 +11,6 @@ import softeer.be33ma3.domain.ChatMessage;
 import softeer.be33ma3.domain.ChatRoom;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.response.LastMessageDto;
-import softeer.be33ma3.repository.ChatMessageRepository;
-import softeer.be33ma3.repository.ChatRoomRepository;
-import softeer.be33ma3.repository.MemberRepository;
 
 import java.util.List;
 
