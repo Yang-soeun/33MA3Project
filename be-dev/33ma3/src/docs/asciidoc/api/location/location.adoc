@@ -1,0 +1,6 @@
+[[all-centers]]
+=== 모든 센터 정보 내려주기
+
+==== HTTP Response
+include::{snippets}/all-centers/http-response.adoc[]
+include::{snippets}/all-centers/response-fields.adoc[]
