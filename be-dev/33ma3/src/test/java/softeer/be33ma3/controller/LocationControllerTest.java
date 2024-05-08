@@ -8,14 +8,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-
 import softeer.be33ma3.dto.response.CenterListDto;
 import softeer.be33ma3.service.LocationService;
 
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,7 +34,7 @@ class LocationControllerTest {
 
         //when //then
         mockMvc.perform(get("/location?latitude=" + anyDouble() + "&longitude=" + anyDouble() + "&radius=" + anyDouble()))
-                .andDo(MockMvcResultHandlers.print())
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("반경 내 위치한 센터 정보 전송 완료"))
@@ -45,11 +44,16 @@ class LocationControllerTest {
     @DisplayName("회원가입 된 모든 서비스 센터들을 반환한다.")
     @Test
     void getAllCenters() throws Exception {
-        //given //when //then
+        //given
+        List<CenterListDto> result = List.of();
+        given(locationService.getAllCenters()).willReturn(result);
+
+        //when //then
         mockMvc.perform(get("/center/all"))
-                .andDo(MockMvcResultHandlers.print())
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("모든 센터 정보 전송 완료"));
+                .andExpect(jsonPath("$.message").value("모든 센터 정보 전송 완료"))
+                .andExpect(jsonPath("$.data").isArray());
     }
 }
