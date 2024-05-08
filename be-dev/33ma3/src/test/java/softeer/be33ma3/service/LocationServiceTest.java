@@ -32,11 +32,6 @@ class LocationServiceTest {
         Member member2 = new Member(2, "center2", "1234", null);
 
         memberRepository.saveAll(List.of(member1, member2));
-
-        Center center1 = Center.createCenter(37.6, 127.0, member1);
-        Center center2 = Center.createCenter(37.509, 127.0, member2);
-
-        centerRepository.saveAll(List.of(center1, center2));
     }
 
     @AfterEach
@@ -49,6 +44,13 @@ class LocationServiceTest {
     @Test
     void getCentersInRadius(){
         //given
+        Member member1 = memberRepository.findMemberByLoginId("center1").get();
+        Member member2 = memberRepository.findMemberByLoginId("center2").get();
+        Center center1 = Center.createCenter(37.6, 127.0, member1);
+        Center center2 = Center.createCenter(37.509, 127.0, member2);
+
+        centerRepository.saveAll(List.of(center1, center2));
+
         double memberLatitude = 37.5;
         double memberLongitude = 127.0;
         double radius = 1.0;
@@ -65,7 +67,15 @@ class LocationServiceTest {
     @DisplayName("저장된 모든 센터들을 반환한다.")
     @Test
     void getAllCenters(){
-        //given //when
+        //given
+        Member member1 = memberRepository.findMemberByLoginId("center1").get();
+        Member member2 = memberRepository.findMemberByLoginId("center2").get();
+        Center center1 = Center.createCenter(37.6, 127.0, member1);
+        Center center2 = Center.createCenter(37.509, 127.0, member2);
+
+        centerRepository.saveAll(List.of(center1, center2));
+
+        // when
         List<CenterListDto> allCenters = locationService.getAllCenters();
 
         //then
