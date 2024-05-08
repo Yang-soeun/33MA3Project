@@ -1,5 +1,6 @@
 package softeer.be33ma3.controller;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import softeer.be33ma3.dto.response.CenterListDto;
 import softeer.be33ma3.service.LocationService;
 
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,16 +30,16 @@ class LocationControllerTest {
     @Test
     void getCentersInRadius() throws Exception {
         //given
-        double latitude = 37.547427;
-        double longitude = 127.056600;
-        double radius = 1.0;
+        List<CenterListDto> result = List.of();
+        given(locationService.getCentersInRadius(anyDouble(), anyDouble(), anyDouble())).willReturn(result);
 
         //when //then
-        mockMvc.perform(get("/location?latitude=" + latitude + "&longitude=" + longitude + "&radius=" + radius))
+        mockMvc.perform(get("/location?latitude=" + anyDouble() + "&longitude=" + anyDouble() + "&radius=" + anyDouble()))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("반경 내 위치한 센터 정보 전송 완료"));
+                .andExpect(jsonPath("$.message").value("반경 내 위치한 센터 정보 전송 완료"))
+                .andExpect(jsonPath("$.data").isArray());
     }
 
     @DisplayName("회원가입 된 모든 서비스 센터들을 반환한다.")
