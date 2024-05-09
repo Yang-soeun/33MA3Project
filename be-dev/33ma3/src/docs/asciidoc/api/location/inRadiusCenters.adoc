@@ -1,0 +1,10 @@
+[[inRadius-centers]]
+=== 반경 안 센터 정보 내려주기
+
+==== HTTP Request
+include::{snippets}/inRadius-centers/http-request.adoc[]
+include::{snippets}/inRadius-centers/query-parameters.adoc[]
+
+==== HTTP Response
+include::{snippets}/inRadius-centers/http-response.adoc[]
+include::{snippets}/inRadius-centers/response-fields.adoc[]

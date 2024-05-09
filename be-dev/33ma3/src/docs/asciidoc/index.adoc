@@ -12,4 +12,5 @@ endif::[]
 [[Location-API]]
 == Location 관련 API
 
-include::api/location/location.adoc[]
+include::api/location/allCenters.adoc[]
+include::api/location/inRadiusCenters.adoc[]
