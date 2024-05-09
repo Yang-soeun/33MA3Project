@@ -1,9 +1,7 @@
 package softeer.be33ma3.controller;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +17,6 @@ import softeer.be33ma3.dto.request.CenterSignUpDto;
 import softeer.be33ma3.dto.request.ClientSignUpDto;
 import softeer.be33ma3.dto.request.LoginDto;
 import softeer.be33ma3.jwt.JwtProvider;
-import softeer.be33ma3.jwt.JwtService;
 import softeer.be33ma3.jwt.JwtToken;
 import softeer.be33ma3.repository.MemberRepository;
 import softeer.be33ma3.service.MemberService;
@@ -27,7 +24,6 @@ import softeer.be33ma3.service.MemberService;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -40,26 +36,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 class MemberControllerTest {
-    private static String refreshToken;
-    private static String accessToken;
-
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @MockBean private MemberService memberService;
-    @MockBean private JwtService jwtService;
     @Autowired private JwtProvider jwtProvider;
     @Autowired private MemberRepository memberRepository;
+    @MockBean private MemberService memberService;
 
-    @BeforeEach
-    void setUp(){
-        Member member = Member.createClient("테스트", "1234", null);
-        Member savedMember = memberRepository.save(member);
-        JwtToken jwtToken = jwtProvider.createJwtToken(savedMember.getMemberType(), savedMember.getMemberId(), savedMember.getLoginId());
-
-        refreshToken = jwtToken.getRefreshToken();
-        accessToken = jwtToken.getAccessToken();
-        savedMember.setRefreshToken(refreshToken);
-    }
 
     @AfterEach
     void tearDown() {
@@ -155,7 +137,16 @@ class MemberControllerTest {
     @DisplayName("리프레시 토큰으로 엑세스 토큰을 재발급 받을 수 있다.")
     @Test
     void reissueToken() throws Exception {
-        //given //when //then
+        //given
+        Member member = Member.createClient("테스트", "1234", null);
+        Member savedMember = memberRepository.save(member);
+        JwtToken jwtToken = jwtProvider.createJwtToken(savedMember.getMemberType(), savedMember.getMemberId(), savedMember.getLoginId());
+
+        String refreshToken = jwtToken.getRefreshToken();
+        String accessToken = jwtToken.getAccessToken();
+        savedMember.setRefreshToken(refreshToken);
+
+        //when //then
         mockMvc.perform(post("/reissueToken")
                         .header("Authorization-refresh", refreshToken)
                         .header("Authorization", accessToken)
