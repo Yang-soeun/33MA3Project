@@ -84,7 +84,7 @@ class OfferDetailDtoTest {
     }
     private Member createCenter(String loginId, String password) {
         Image profile = Image.createImage("profile.png", "profile.png");
-        Image savedProfile = imageRepository.save(profile);
+        String savedProfile = imageRepository.save(profile).getLink();
         Member center = Member.createCenter(loginId, password, savedProfile);
         return memberRepository.save(center);
     }

@@ -31,7 +31,7 @@ public class OneReviewDto {
         oneReviewDto.reviewId = review.getReviewId();
         oneReviewDto.writerId = review.getWriter().getMemberId();
         oneReviewDto.writerName = review.getWriter().getLoginId();
-        oneReviewDto.writerImage = review.getWriter().getImage().getLink();
+        oneReviewDto.writerImage = review.getWriter().getImage();
         oneReviewDto.contents = review.getContents();
         oneReviewDto.score = review.getScore();
         oneReviewDto.repairList = stringCommaParsing(review.getPost().getRepairService());

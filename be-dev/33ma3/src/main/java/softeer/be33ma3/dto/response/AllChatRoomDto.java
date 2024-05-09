@@ -32,9 +32,9 @@ public class AllChatRoomDto {
         AllChatRoomDto allChatRoomDto = new AllChatRoomDto();
         allChatRoomDto.roomId = chatRoom.getChatRoomId();
         allChatRoomDto.centerId = chatRoom.getCenter().getMemberId();
-        allChatRoomDto.centerProfile = chatRoom.getCenter().getImage().getLink();
+        allChatRoomDto.centerProfile = chatRoom.getCenter().getImage();
         allChatRoomDto.clientId = chatRoom.getClient().getMemberId();
-        allChatRoomDto.clientProfile = chatRoom.getClient().getImage().getLink();
+        allChatRoomDto.clientProfile = chatRoom.getClient().getImage();
         allChatRoomDto.memberName = memberName;
         allChatRoomDto.lastMessage = lastMessage;
         allChatRoomDto.noReadCount = noReadCount;

@@ -20,7 +20,7 @@ public class ShowCenterReviewsDto {
     public static ShowCenterReviewsDto create(Member center,  double scoreAvg, List<OneReviewDto> reviews) {
         ShowCenterReviewsDto showCenterReviewsDto = new ShowCenterReviewsDto();
         showCenterReviewsDto.centerName = center.getLoginId();
-        showCenterReviewsDto.centerImage = center.getImage().getLink();
+        showCenterReviewsDto.centerImage = center.getImage();
         showCenterReviewsDto.scoreAvg = scoreAvg;
         showCenterReviewsDto.reviews = reviews;
 

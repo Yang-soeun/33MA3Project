@@ -31,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ActiveProfiles("test")
 @SpringBootTest
 class ReviewServiceTest {
+    private final String DEFAULT_PROFILE  = "default_profile.png";
+
     @Autowired private MemberRepository memberRepository;
     @Autowired private ReviewRepository reviewRepository;
     @Autowired private ReviewService reviewService;
@@ -42,16 +44,9 @@ class ReviewServiceTest {
     @BeforeEach
     void setUp(){
         //회원 저장
-        Image image1 = Image.createImage("test", "test.png");
-        Image image2 = Image.createImage("test", "test.png");
-        Image image3 = Image.createImage("test", "test.png");
-        Image savedImage1 = imageRepository.save(image1);
-        Image savedImage2 = imageRepository.save(image2);
-        Image savedImage3 = imageRepository.save(image3);
-
-        Member writer1 = Member.createClient( "client1", "1234", savedImage1);
-        Member writer2 = Member.createClient( "client2", "1234", savedImage2);
-        Member center = Member.createCenter( "center1", "1234", savedImage3);
+        Member writer1 = Member.createClient( "client1", "1234", DEFAULT_PROFILE);
+        Member writer2 = Member.createClient( "client2", "1234", DEFAULT_PROFILE);
+        Member center = Member.createCenter( "center1", "1234", DEFAULT_PROFILE);
         memberRepository.saveAll(List.of(writer1, writer2,center));
         regionRepository.save(new Region(1L, "강남구"));
     }

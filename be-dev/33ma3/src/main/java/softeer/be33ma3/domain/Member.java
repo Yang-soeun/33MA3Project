@@ -21,24 +21,22 @@ public class Member {
 
     private String password;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_id")
-    private Image image;
+    private String image;
 
     private String refreshToken;
 
-    public Member(int memberType, String loginId, String password, Image image) {
+    public Member(int memberType, String loginId, String password, String image) {
         this.memberType = memberType;
         this.loginId = loginId;
         this.password = password;
         this.image = image;
     }
 
-    public static Member createClient(String loginId, String password, Image image){
+    public static Member createClient(String loginId, String password, String image){
         return new Member(CLIENT_TYPE, loginId, password, image);
     }
 
-    public static Member createCenter(String loginId, String password, Image image){
+    public static Member createCenter(String loginId, String password, String image){
         return new Member(CENTER_TYPE, loginId, password, image);
     }
 
@@ -46,7 +44,7 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
-    public void setProfile(Image image) {
+    public void setProfile(String image) {
         this.image = image;
     }
 

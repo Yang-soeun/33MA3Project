@@ -223,7 +223,7 @@ class ChatServiceTest {
         return postRepository.save(post);
     }
 
-    private Image saveProfile() {
-        return imageRepository.save(Image.createImage("test", "test.png"));
+    private String saveProfile() {
+        return imageRepository.save(Image.createImage("test", "test.png")).getLink();
     }
 }

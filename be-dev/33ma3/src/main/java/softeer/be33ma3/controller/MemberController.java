@@ -2,7 +2,6 @@ package softeer.be33ma3.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +22,7 @@ public class MemberController {
     private final MemberService memberService;
     private final JwtService jwtService;
 
-    @PostMapping(value = "/client/signUp", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/client/signUp")
     public ResponseEntity<?> clientSignUp(@RequestPart(name = "request") @Valid ClientSignUpDto clientSignUpDto,
                                           @RequestPart(name = "profile", required = false) MultipartFile profile) {
         memberService.clientSignUp(clientSignUpDto, profile);
@@ -31,7 +30,7 @@ public class MemberController {
         return ResponseEntity.ok(SingleResponse.success("회원가입 성공"));
     }
 
-    @PostMapping(value = "/center/signUp", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/center/signUp")
     public ResponseEntity<?> centerSignUp(@RequestPart(name = "request") @Valid CenterSignUpDto centerSignUpDto,
                                           @RequestPart(name = "profile", required = false) MultipartFile profile) {
         memberService.centerSignUp(centerSignUpDto, profile);

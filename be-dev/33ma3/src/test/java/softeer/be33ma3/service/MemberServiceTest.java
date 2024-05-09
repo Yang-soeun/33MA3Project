@@ -6,9 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
-import softeer.be33ma3.domain.Image;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.request.CenterSignUpDto;
 import softeer.be33ma3.dto.request.ClientSignUpDto;
@@ -18,7 +16,6 @@ import softeer.be33ma3.exception.ErrorCode;
 import softeer.be33ma3.repository.CenterRepository;
 import softeer.be33ma3.repository.MemberRepository;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,7 +67,7 @@ class MemberServiceTest {
         ClientSignUpDto clientSignUpDto = new ClientSignUpDto("test1", "1234");
 
         //when //then
-        assertThatThrownBy(() -> memberService.clientSignUp(clientSignUpDto, createImages()))
+        assertThatThrownBy(() -> memberService.clientSignUp(clientSignUpDto, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_ID);
     }
@@ -84,7 +81,7 @@ class MemberServiceTest {
         CenterSignUpDto centerSignUpDto = new CenterSignUpDto("test1", "1234", 37.5, 127.0);
 
         //when //then
-        assertThatThrownBy(() -> memberService.centerSignUp(centerSignUpDto, createImages()))
+        assertThatThrownBy(() -> memberService.centerSignUp(centerSignUpDto, null))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_ID);
     }
@@ -151,24 +148,9 @@ class MemberServiceTest {
     @Test
     void saveProfileWithNullImage() throws IOException {
         //given //when
-        Image image = memberService.saveProfile(null);
+        String image = memberService.saveProfile(null);
 
         //then
         assertThat(image).isNotNull();
-    }
-
-    private MockMultipartFile createImages() throws IOException {
-        String fileName = "testImage"; //파일명
-        String contentType = "jpg"; //파일타입
-        String filePath = "src/test/resources/testImage/"+fileName+"."+contentType;
-
-        FileInputStream fileInputStream = new FileInputStream(filePath);
-        MockMultipartFile multipartFile = new MockMultipartFile(
-                "images",
-                fileName + "." + contentType,
-                contentType,
-                fileInputStream
-        );
-        return multipartFile;
     }
 }

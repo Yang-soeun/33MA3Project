@@ -33,7 +33,7 @@ public class OfferDetailDto implements Comparable<OfferDetailDto> {
                 .contents(offer.getContents())
                 .selected(offer.isSelected())
                 .score(score)
-                .profile(offer.getCenter().getImage().getLink()).build();
+                .profile(offer.getCenter().getImage()).build();
     }
 
     // 제시 가격 저렴한 순 -> 별점 높은 순 정렬

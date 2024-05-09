@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import softeer.be33ma3.domain.Center;
-import softeer.be33ma3.domain.Image;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.request.CenterSignUpDto;
 import softeer.be33ma3.dto.request.LoginDto;
@@ -25,6 +24,7 @@ import static softeer.be33ma3.exception.ErrorCode.*;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
+    private final String DEFAULT_PROFILE  = "default_profile.png";
     private final MemberRepository memberRepository;
     private final CenterRepository centerRepository;
     private final JwtService jwtService;
@@ -48,6 +48,7 @@ public class MemberService {
         if (memberRepository.findMemberByLoginId(centerSignUpDto.getLoginId()).isPresent()) {
             throw new BusinessException(DUPLICATE_ID);
         }
+
         Member member = Member.createCenter(centerSignUpDto.getLoginId(), centerSignUpDto.getPassword(), saveProfile(profile));
 
         Member savedMember = memberRepository.save(member);
@@ -61,13 +62,6 @@ public class MemberService {
     }
 
     @Transactional
-    public Image saveProfile(MultipartFile profile) {
-        if(profile == null)
-            return imageRepository.save(Image.createImage(s3Service.getFileUrl("profile.png"), "profile.png"));
-        return imageService.saveImage(profile);
-    }
-
-    @Transactional
     public LoginSuccessDto login(LoginDto loginDto) {
         Member member = memberRepository.findByLoginIdAndPassword(loginDto.getLoginId(), loginDto.getPassword())
                 .orElseThrow(() -> new BusinessException(ID_PASSWORD_MISMATCH));
@@ -76,5 +70,13 @@ public class MemberService {
         member.setRefreshToken(jwtToken.getRefreshToken()); //리프레시 토큰 저장
 
         return LoginSuccessDto.createLoginSuccessDto(member, jwtToken);
+    }
+
+    @Transactional
+    public String saveProfile(MultipartFile profile) {
+        if (profile == null) {
+            return DEFAULT_PROFILE; //기본 프로필
+        }
+        return imageService.saveImage(profile).getLink();
     }
 }

@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Transactional
 @ActiveProfiles("test")
 class OfferServiceTest {
+    private final String DEFAULT_PROFILE  = "default_profile.png";
 
     @Autowired private OfferRepository offerRepository;
     @Autowired private PostRepository postRepository;
@@ -327,14 +328,12 @@ class OfferServiceTest {
     }
 
     private Member saveCenter(String loginId, String password) {
-        Image savedImage = imageRepository.save(Image.createImage("profile.png", "profile.png"));
-        Member member = Member.createCenter(loginId, password, savedImage);
+        Member member = Member.createCenter(loginId, password, DEFAULT_PROFILE);
         return memberRepository.save(member);
     }
 
     private Member saveClient(String loginId, String password) {
-        Image savedImage = imageRepository.save(Image.createImage("profile.png", "profile.png"));
-        Member member = Member.createClient(loginId, password, savedImage);
+        Member member = Member.createClient(loginId, password, DEFAULT_PROFILE);
         return memberRepository.save(member);
     }
 }
