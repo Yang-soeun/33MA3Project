@@ -19,7 +19,11 @@ class CenterTest {
     @Test
     void isWithinRadius(){
         //given
-        Center center = Center.createCenter(37.5, 127.0, null);
+        Center center = Center.builder()
+                .latitude(37.5)
+                .longitude(127.0)
+                .build();
+
         double memberLatitude = 37.509; //0.9차이가 1km 차이
         double memberLongitude = 127.0;
         double radius = 1.0;

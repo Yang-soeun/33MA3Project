@@ -48,11 +48,15 @@ public class MemberService {
         if (memberRepository.findMemberByLoginId(centerSignUpDto.getLoginId()).isPresent()) {
             throw new BusinessException(DUPLICATE_ID);
         }
-
         Member member = Member.createCenter(centerSignUpDto.getLoginId(), centerSignUpDto.getPassword(), saveProfile(profile));
 
         Member savedMember = memberRepository.save(member);
-        Center center = Center.createCenter(centerSignUpDto.getLatitude(), centerSignUpDto.getLongitude(), savedMember);
+        Center center = Center.builder()
+                .latitude(centerSignUpDto.getLatitude())
+                .longitude(centerSignUpDto.getLongitude())
+                .member(savedMember)
+                .build();
+
         centerRepository.save(center);
     }
 

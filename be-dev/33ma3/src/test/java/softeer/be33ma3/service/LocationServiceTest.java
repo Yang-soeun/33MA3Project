@@ -46,8 +46,8 @@ class LocationServiceTest {
         //given
         Member member1 = memberRepository.findMemberByLoginId("center1").get();
         Member member2 = memberRepository.findMemberByLoginId("center2").get();
-        Center center1 = Center.createCenter(37.6, 127.0, member1);
-        Center center2 = Center.createCenter(37.509, 127.0, member2);
+        Center center1 = createCenter(37.6, 127.0, member1);
+        Center center2 = createCenter(37.509, 127.0, member2);
 
         centerRepository.saveAll(List.of(center1, center2));
 
@@ -70,8 +70,8 @@ class LocationServiceTest {
         //given
         Member member1 = memberRepository.findMemberByLoginId("center1").get();
         Member member2 = memberRepository.findMemberByLoginId("center2").get();
-        Center center1 = Center.createCenter(37.6, 127.0, member1);
-        Center center2 = Center.createCenter(37.509, 127.0, member2);
+        Center center1 = createCenter(37.6, 127.0, member1);
+        Center center2 = createCenter(37.509, 127.0, member2);
 
         centerRepository.saveAll(List.of(center1, center2));
 
@@ -83,5 +83,13 @@ class LocationServiceTest {
                 .extracting("latitude", "longitude")
                 .containsExactly(tuple(37.6, 127.0),
                         tuple(37.509, 127.0));
+    }
+
+    private Center createCenter(double latitude, double longitude, Member member){
+        return Center.builder()
+                .latitude(latitude)
+                .longitude(longitude)
+                .member(member)
+                .build();
     }
 }

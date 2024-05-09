@@ -309,7 +309,8 @@ class PostServiceTest {
         // given
         Member center = Member.createCenter("center1", "center1", null);
         Member center1 = memberRepository.save(center);
-        Center center2 = centerRepository.save(Center.createCenter(0, 0, center1));
+        Center center2 = centerRepository.save(createCenter(center1));
+
         Member client = memberRepository.findMemberByLoginId("client1").get();
         PostCreateDto postCreateDto1 = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"내용");
         Region region = regionRepository.findByRegionName("강남구").get();
@@ -355,6 +356,15 @@ class PostServiceTest {
                 .contents(contents)
                 .post(post)
                 .center(center).build();
+
         return offerRepository.save(offer);
+    }
+
+    private Center createCenter(Member member) {
+        return Center.builder()
+                .latitude(0)
+                .longitude(0)
+                .member(member)
+                .build();
     }
 }
