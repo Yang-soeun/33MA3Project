@@ -38,6 +38,8 @@ import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class PostServiceTest {
+    public static final String LOCATION = "서울시 강남구";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private PostService postService;
     @Autowired private PostRepository postRepository;
@@ -79,7 +81,7 @@ class PostServiceTest {
 
         Member member = memberRepository.findMemberByLoginId("client1").get();
 
-        PostCreateDto postCreateDto = createPostDto("게시글 생성 이미지 포함");
+        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, multipartFiles);
@@ -95,7 +97,7 @@ class PostServiceTest {
     void createPostWithoutImage(){
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = createPostDto("게시글 생성 이미지 미포함");
+        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 미포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, null);
@@ -104,6 +106,19 @@ class PostServiceTest {
         Post post = postRepository.findById(postId).get();
         assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
                 .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일 교체", "게시글 생성 이미지 미포함");
+    }
+
+    @DisplayName("게시글 작성 시 존재하지 않는 지역인 경우 예외가 발생한다.")
+    @Test
+    void createPostWithUnknownRegion(){
+        //given
+        Member member = memberRepository.findMemberByLoginId("center1").get();
+        PostCreateDto postCreateDto = createPostDto("서울시 없는구", "게시글 작성 불가능");
+
+        //when  //then
+        assertThatThrownBy(() -> postService.createPost(member, postCreateDto, null))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.POST_CREATION_DISABLED);
     }
 
     @DisplayName("센터가 글을 작성하면 예외가 발생한다.")
@@ -126,7 +141,7 @@ class PostServiceTest {
         Member member = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
         Post savedPost = savePost(region, member);
-        PostCreateDto postEditDto = createPostDto("수정 후 내용");
+        PostCreateDto postEditDto = createPostDto(LOCATION,"수정 후 내용");
 
         //when
         postService.editPost(member, savedPost.getPostId(), postEditDto);
@@ -164,7 +179,7 @@ class PostServiceTest {
         return List.of(
                 DynamicTest.dynamicTest("댓글이 달리기 전에는 게시글을 수정할 수 있다.", () -> {
                     //given
-                    PostCreateDto postEditDto = createPostDto("수정 가능");
+                    PostCreateDto postEditDto = createPostDto(LOCATION,"수정 가능");
 
                     //when
                     postService.editPost(client, savedPost.getPostId(), postEditDto);
@@ -176,7 +191,7 @@ class PostServiceTest {
                 DynamicTest.dynamicTest("댓글이 달리면 게시글을 수정할 수 없다.", () -> {
                     //given
                     saveOffer(1, "내용", savedPost, center);
-                    PostCreateDto postEditDto = createPostDto("수정 불가능");
+                    PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능");
 
                     //when //then
                     assertThatThrownBy(() -> postService.editPost(client, savedPost.getPostId(), postEditDto))
@@ -195,7 +210,7 @@ class PostServiceTest {
         Post savedPost = savePost(region, client);
 
         Long postId = savedPost.getPostId() + 1L;
-        PostCreateDto postEditDto = createPostDto("수정 불가능");
+        PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능");
 
         //when //then
         assertThatThrownBy(() -> postService.editPost(client, postId, postEditDto))
@@ -385,11 +400,11 @@ class PostServiceTest {
                 .build();
     }
 
-    private static PostCreateDto createPostDto(String contents) {
+    private static PostCreateDto createPostDto(String location, String contents) {
         return PostCreateDto.builder()
                 .carType("승용차")
                 .modelName("제네시스")
-                .deadline(11)
+                .deadline(5)
                 .location("서울시 강남구")
                 .repairService("기스, 깨짐")
                 .tuneUpService("오일 교체")
