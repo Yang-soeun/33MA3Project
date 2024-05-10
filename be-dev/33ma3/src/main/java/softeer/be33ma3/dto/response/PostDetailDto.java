@@ -6,10 +6,10 @@ import softeer.be33ma3.domain.Image;
 import softeer.be33ma3.domain.Post;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static softeer.be33ma3.utils.StringParser.stringCommaParsing;
+import static softeer.be33ma3.utils.TimeCalculator.calculateDuration;
 
 @Builder
 @Getter
@@ -61,14 +61,8 @@ public class PostDetailDto {
                 .imageList(imageList).build();
     }
 
-    public static Duration calculateDuration(Post post) {
-        LocalDateTime endTime = post.getCreateTime().plusDays(post.getDeadline());
-        endTime = endTime.withHour(23).withMinute(59).withSecond(59);
-        return Duration.between(LocalDateTime.now(), endTime);
-    }
-
     // 마감 시간까지 남은 시간을 초 단위로 반환
-    public static int calculateRemainTime(Duration duration) {
+    private static int calculateRemainTime(Duration duration) {
         return (int) duration.toSeconds();
     }
 }

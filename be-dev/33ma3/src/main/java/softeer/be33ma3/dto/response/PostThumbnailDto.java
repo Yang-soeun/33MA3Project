@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static softeer.be33ma3.utils.StringParser.stringCommaParsing;
+import static softeer.be33ma3.utils.TimeCalculator.calculateDuration;
 
 @Getter
 @Builder
@@ -36,7 +37,7 @@ public class PostThumbnailDto {
     // Post Entity -> PostThumbnailDto 변환
     public static PostThumbnailDto fromEntity(Post post) {
         List<String> imageList = post.getImages().stream().map(Image::getLink).toList();
-        Duration duration = PostDetailDto.calculateDuration(post);
+        Duration duration = calculateDuration(post);
         int dDay = -1;
         if(!post.isDone() && !duration.isNegative())        // 아직 마감 시간 전
             dDay = (int)duration.toDays();
