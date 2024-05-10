@@ -20,6 +20,7 @@ import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.request.PostCreateDto;
 import softeer.be33ma3.jwt.JwtProvider;
 import softeer.be33ma3.repository.MemberRepository;
+import softeer.be33ma3.service.ImageService;
 import softeer.be33ma3.service.PostService;
 
 import java.io.FileInputStream;
@@ -43,6 +44,7 @@ class PostControllerTest {
     @Autowired private JwtProvider jwtProvider;
     @Autowired private MemberRepository memberRepository;
     @MockBean private PostService postService;
+    @MockBean private ImageService imageService;
 
     @BeforeEach
     void setUp(){
@@ -60,9 +62,18 @@ class PostControllerTest {
     @Test
     void createPost() throws Exception {
         //given
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정전 내용");
-        MockMultipartFile multipartFile = createImages();
+        PostCreateDto postCreateDto = PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(3)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 생성")
+                .build();
 
+        MockMultipartFile multipartFile = createImages();
         String request = objectMapper.writeValueAsString(postCreateDto);
 
         //when //then
@@ -75,14 +86,23 @@ class PostControllerTest {
                         .header("Authorization", accessToken))
                 .andDo(print())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("게시글 작성 성공"));
+                .andExpect(jsonPath("$.message").value("게시글 작성 성공"))
+                .andExpect(jsonPath("$.data").isNumber());
     }
 
-    @DisplayName("게시글 생성 시 디티오의 문자열 필드가 blank이면 예외가 발생한다.")
+    @DisplayName("게시글 작성 시 차종을 입력하지 않으면 예외가 발생한다.")
     @Test
     void createPostWithBlankField() throws Exception {
         //given
-        PostCreateDto postCreateDto = new PostCreateDto("", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정전 내용");
+        PostCreateDto postCreateDto = PostCreateDto.builder()
+                .modelName("제네시스")
+                .deadline(3)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 생성")
+                .build();
 
         String request = objectMapper.writeValueAsString(postCreateDto);
 

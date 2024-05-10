@@ -3,7 +3,7 @@ package softeer.be33ma3.dto.request;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.Length;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class PostCreateDto {
     @NotBlank(message = "차종은 필수입니다.")
@@ -37,4 +36,17 @@ public class PostCreateDto {
     @Length(max=500, message = "내용은 최대 500글자입니다.")
     @NotNull
     private String contents;
+
+    @Builder
+    public PostCreateDto(String carType, String modelName, Integer deadline, String location, String repairService,
+                         String tuneUpService, List<Long> centers, String contents) {
+        this.carType = carType;
+        this.modelName = modelName;
+        this.deadline = deadline;
+        this.location = location;
+        this.repairService = repairService;
+        this.tuneUpService = tuneUpService;
+        this.centers = centers;
+        this.contents = contents;
+    }
 }

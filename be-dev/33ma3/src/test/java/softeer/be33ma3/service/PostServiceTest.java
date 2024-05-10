@@ -74,7 +74,7 @@ class PostServiceTest {
         List<MultipartFile> multipartFiles = List.of(mockMultipartFile1);
 
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일, 교체", new ArrayList<>(),"게시글 생성 이미지 포함");
+        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, multipartFiles);
@@ -82,7 +82,7 @@ class PostServiceTest {
         //then
         Post post = postRepository.findById(postId).get();
         assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
-                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일, 교체", "게시글 생성 이미지 포함");
+                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일 교체", "게시글 생성 이미지 포함");
     }
 
     @DisplayName("이미지 없이 게시글을 생성할 수 있다.")
@@ -90,7 +90,7 @@ class PostServiceTest {
     void createPostWithoutImage(){
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일, 교체", new ArrayList<>(),"게시글 생성 이미지 미포함");
+        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 미포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, null);
@@ -98,7 +98,7 @@ class PostServiceTest {
         //then
         Post post = postRepository.findById(postId).get();
         assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
-                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일, 교체", "게시글 생성 이미지 미포함");
+                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일 교체", "게시글 생성 이미지 미포함");
     }
 
     @DisplayName("센터가 글을 작성하면 예외가 발생한다.")
