@@ -11,6 +11,7 @@ import softeer.be33ma3.domain.ChatRoom;
 import softeer.be33ma3.domain.Member;
 
 import java.util.List;
+import softeer.be33ma3.repository.chat.ChatRoomRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

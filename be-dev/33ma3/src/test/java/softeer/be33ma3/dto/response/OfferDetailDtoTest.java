@@ -9,11 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.*;
 import softeer.be33ma3.repository.ImageRepository;
 import softeer.be33ma3.repository.MemberRepository;
-import softeer.be33ma3.repository.OfferRepository;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import softeer.be33ma3.repository.offer.OfferRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,27 +47,6 @@ class OfferDetailDtoTest {
         OfferDetailDto actual = OfferDetailDto.fromEntity(savedOffer, 4.5);
         // then
         assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
-    }
-
-    @Test
-    @DisplayName("댓글을 1순위는 제시가격이 저렴한 순으로, 2순위는 센터의 별점이 높은 순으로 정렬한다.")
-    void compareTo() {
-        // given
-        Offer offer1 = saveOffer(3, "offer1", null, createCenter("center1", "center1"));
-        Offer offer2 = saveOffer(1, "offer2", null, createCenter("center2", "center2"));
-        Offer offer3 = saveOffer(2, "offer3", null, createCenter("center3", "center3"));
-        Offer offer4 = saveOffer(2, "offer4", null, createCenter("center4", "center4"));
-        OfferDetailDto offerDetailDto1 = OfferDetailDto.fromEntity(offer1, 5.0);
-        OfferDetailDto offerDetailDto2 = OfferDetailDto.fromEntity(offer2, 0.0);
-        OfferDetailDto offerDetailDto3 = OfferDetailDto.fromEntity(offer3, 4.9);
-        OfferDetailDto offerDetailDto4 = OfferDetailDto.fromEntity(offer4, 5.0);
-        List<OfferDetailDto> actual = Arrays.asList(offerDetailDto1, offerDetailDto2, offerDetailDto3, offerDetailDto4);
-        List<OfferDetailDto> expected = Arrays.asList(offerDetailDto2, offerDetailDto4, offerDetailDto3, offerDetailDto1);
-        // when
-        Collections.sort(actual);
-        // then
-        assertThat(actual).containsExactlyElementsOf(expected);
-
     }
 
     private Offer saveOffer(int price, String contents, Post post, Member center) {

@@ -13,6 +13,8 @@ import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.response.LastMessageDto;
 
 import java.util.List;
+import softeer.be33ma3.repository.chat.ChatMessageRepository;
+import softeer.be33ma3.repository.chat.ChatRoomRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

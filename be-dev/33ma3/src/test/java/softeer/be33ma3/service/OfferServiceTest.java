@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import softeer.be33ma3.domain.Image;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.domain.Offer;
 import softeer.be33ma3.domain.Post;
@@ -17,8 +16,8 @@ import softeer.be33ma3.dto.response.OfferDetailDto;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.repository.ImageRepository;
 import softeer.be33ma3.repository.MemberRepository;
-import softeer.be33ma3.repository.OfferRepository;
-import softeer.be33ma3.repository.PostRepository;
+import softeer.be33ma3.repository.offer.OfferRepository;
+import softeer.be33ma3.repository.post.PostRepository;
 
 import java.util.ArrayList;
 import java.util.Optional;

@@ -14,6 +14,8 @@ import softeer.be33ma3.dto.request.PostCreateDto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import softeer.be33ma3.repository.post.PostRepository;
+import softeer.be33ma3.repository.review.ReviewRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;

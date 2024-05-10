@@ -1,4 +1,4 @@
-package softeer.be33ma3.repository;
+package softeer.be33ma3.repository.review;
 
 import softeer.be33ma3.dto.response.ShowAllReviewDto;
 

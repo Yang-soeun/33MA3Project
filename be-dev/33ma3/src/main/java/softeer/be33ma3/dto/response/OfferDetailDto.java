@@ -1,12 +1,16 @@
 package softeer.be33ma3.dto.response;
 
+import jakarta.validation.constraints.NegativeOrZero.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import softeer.be33ma3.domain.Offer;
 
-@Getter
+@Data
 @Builder
-public class OfferDetailDto implements Comparable<OfferDetailDto> {
+@AllArgsConstructor
+public class OfferDetailDto {
     private Long offerId;
 
     private Long memberId;
@@ -23,7 +27,6 @@ public class OfferDetailDto implements Comparable<OfferDetailDto> {
 
     private String profile;
 
-    // Offer Entity -> OfferDetailDto 변환
     public static OfferDetailDto fromEntity(Offer offer, Double score) {
         return OfferDetailDto.builder()
                 .offerId(offer.getOfferId())
@@ -36,15 +39,14 @@ public class OfferDetailDto implements Comparable<OfferDetailDto> {
                 .profile(offer.getCenter().getImage()).build();
     }
 
-    // 제시 가격 저렴한 순 -> 별점 높은 순 정렬
-    @Override
-    public int compareTo(OfferDetailDto other) {
-        if(price != other.price)
-            return price - other.price;
-        if(score > other.getScore())
-            return -1;
-        else if(score < other.getScore())
-            return 1;
-        return 0;
-    }
+//    // 제시 가격 저렴한 순 -> 별점 높은 순 정렬
+//    @Override
+//    public int compareTo(OfferDetailDto other) {
+//        int priceDifference = Integer.compare(this.price, other.price);
+//        if (priceDifference != 0) { //가격이 다른 경우
+//            return priceDifference; //가격 기준
+//        }
+//
+//        return Double.compare(other.score, this.score); //가격이 같은 경우 별점 기준
+//    }
 }

@@ -1,16 +1,17 @@
-package softeer.be33ma3.repository;
+package softeer.be33ma3.repository.chat;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import softeer.be33ma3.dto.response.LastMessageDto;
+import softeer.be33ma3.repository.chat.ChatMessageCustomRepository;
 
 import static softeer.be33ma3.domain.QChatMessage.chatMessage;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatMessageCustomRepositoryImpl implements ChatMessageCustomRepository{
+public class ChatMessageCustomRepositoryImpl implements ChatMessageCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override

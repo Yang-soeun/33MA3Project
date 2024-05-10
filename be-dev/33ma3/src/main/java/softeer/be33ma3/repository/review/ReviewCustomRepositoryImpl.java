@@ -1,4 +1,4 @@
-package softeer.be33ma3.repository;
+package softeer.be33ma3.repository.review;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -16,18 +16,16 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository{
 
     @Override
     public List<ShowAllReviewDto> findReviewGroupByCenter() {
-        List<ShowAllReviewDto> result = jpaQueryFactory
+        return jpaQueryFactory
                 .select(Projections.constructor(ShowAllReviewDto.class,
                         review.center.memberId,
                         review.score.avg().doubleValue(),
                         review.count(),
                         review.center.loginId,
-                        review.center.image.link))
+                        review.center.image))
                 .from(review)
                 .groupBy(review.center.memberId)
                 .orderBy(review.score.avg().desc())
                 .fetch();
-
-        return result;
     }
 }

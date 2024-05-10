@@ -12,6 +12,8 @@ import softeer.be33ma3.dto.request.PostCreateDto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import softeer.be33ma3.repository.offer.OfferRepository;
+import softeer.be33ma3.repository.post.PostRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

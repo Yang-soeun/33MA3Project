@@ -10,8 +10,9 @@ import softeer.be33ma3.dto.request.PostCreateDto;
 import softeer.be33ma3.dto.response.*;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.repository.*;
-import softeer.be33ma3.repository.PostRepository;
-import softeer.be33ma3.repository.ReviewRepository;
+import softeer.be33ma3.repository.offer.OfferRepository;
+import softeer.be33ma3.repository.post.PostRepository;
+import softeer.be33ma3.repository.review.ReviewRepository;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -117,31 +118,30 @@ public class PostService {
         return post;
     }
 
-    // 게시글 세부사항 반환 (로그인 하지 않아도 확인 가능)
     public Object showPost(Long postId, Member member) {
-        // 1. 게시글 존재 유무 판단
         Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
-        if(member == null && !post.isDone())
+        if (member == null && !post.isDone()) {     //진행중인 경매는 로그인 한 사용자만 볼 수 있다.
             throw new BusinessException(LOGIN_REQUIRED);
-        // 2. 게시글 세부 사항 가져오기
+        }
+
         PostDetailDto postDetailDto = PostDetailDto.fromEntity(post);
-        // 3. 경매가 완료되었거나 글 작성자의 접근일 경우
-        if(post.isDone() || (member!=null && post.getMember().getMemberId().equals(member.getMemberId()))) {
-            List<Offer> offerList = post.getOffers();
-            List<OfferDetailDto> offerDetailDtos = new ArrayList<>(
-                    offerList.stream().map(offer -> {
-                        Double score = reviewRepository.findAvgScoreByCenterId(offer.getCenter().getMemberId()).orElse(0.0);
-                        return OfferDetailDto.fromEntity(offer, score);
-                    }).toList());
-            Collections.sort(offerDetailDtos);
+        if(post.isDone() || (member!=null && post.isWriter(member.getMemberId()))) {    //경매가 완료 되었거나, 작성자인 경우
+            List<Long> centerIds = offerRepository.findCenterMemberIdsByPost_PostId(postId);
+            List<OfferDetailDto> offerDetailDtos = offerRepository.findOfferAndAvgPriceByCenterId(centerIds);
             return new PostWithOffersDto(postDetailDto, offerDetailDtos);
         }
-        // 4. 경매가 진행 중이고 작성자가 아닌 유저의 접근일 경우
+
+        //경매가 진행 중이고 작성자가 아닌 유저의 접근일 경우
+        return createPostWithPriceDto(postId, member, postDetailDto);
+    }
+
+    private PostWithAvgPriceDto createPostWithPriceDto(Long postId, Member member, PostDetailDto postDetailDto) {
         Double avgPrice = offerRepository.findAvgPriceByPostId(postId).orElse(0.0);
         PostWithAvgPriceDto postWithAvgPriceDto = new PostWithAvgPriceDto(postDetailDto, Math.round( avgPrice * 10 ) / 10.0);
-        // 견적을 작성한 이력이 있는 서비스 센터의 접근일 경우 작성한 견적 가져오기
+        // 견적을 작성한 이력이 있는 서비스 센터인 경우 작성한 견적 가져오기
         OfferDetailDto offerDetailDto = getCenterOffer(postId, member);
         postWithAvgPriceDto.setOfferDetailDto(offerDetailDto);
+
         return postWithAvgPriceDto;
     }
 

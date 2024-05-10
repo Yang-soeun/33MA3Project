@@ -10,9 +10,10 @@ import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.*;
 
 import java.util.List;
+import softeer.be33ma3.repository.chat.ChatMessageRepository;
+import softeer.be33ma3.repository.chat.ChatRoomRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 
 @SpringBootTest
 @ActiveProfiles("test")
