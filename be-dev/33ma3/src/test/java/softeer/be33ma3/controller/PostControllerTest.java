@@ -152,7 +152,16 @@ class PostControllerTest {
     @Test
     void editPost() throws Exception {
         //given
-        PostCreateDto request = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정전 내용");
+        PostCreateDto request = PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(3)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 수정")
+                .build();
 
         //when //then
         mockMvc.perform(put("/post/{post_id}", 1)

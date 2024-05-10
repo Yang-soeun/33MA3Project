@@ -27,11 +27,14 @@ import softeer.be33ma3.repository.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
 
 @SpringBootTest
@@ -72,7 +75,7 @@ class PostServiceTest {
         regionRepository.deleteAllInBatch();
     }
 
-    @DisplayName("게시글을 생성할 수 있다.")
+    @DisplayName("게시글을 생성할 수 있다. - 이미지 포함")
     @Test
     void createPostWithImage(){
         //given
@@ -80,19 +83,19 @@ class PostServiceTest {
         List<MultipartFile> multipartFiles = List.of(mockMultipartFile1);
 
         Member member = memberRepository.findMemberByLoginId("client1").get();
-
         PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, multipartFiles);
 
         //then
+        verify(imageService, times(1)).saveImages((anyList()));
         Post post = postRepository.findById(postId).get();
         assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
                 .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일 교체", "게시글 생성 이미지 포함");
     }
 
-    @DisplayName("이미지 없이 게시글을 생성할 수 있다.")
+    @DisplayName("게시글을 생성할 수 있다. - 이미지 미포함")
     @Test
     void createPostWithoutImage(){
         //given
@@ -225,15 +228,14 @@ class PostServiceTest {
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-
         Post savedPost = savePost(region, member);
 
         //when
         postService.deletePost(member, savedPost.getPostId());
 
         //then
-        Optional<Post> postId = postRepository.findById(savedPost.getPostId());
-        assertThat(postId).isEmpty();
+        verify(imageService, times(1)).deleteImage(any());
+        assertThat(postRepository.findById(savedPost.getPostId())).isEmpty();
     }
 
     @DisplayName("작성자와 다른 사람이 게시글을 삭제하려고 하면 예외가 발생한다.")
@@ -252,7 +254,7 @@ class PostServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTHOR_ONLY_ACCESS);
     }
 
-    @DisplayName("경매가 시작된 후에 게시글을 삭제하려고 하면 예외가 발생한다.")
+    @DisplayName("경매가 시작된 후 게시글을 삭제하려고 하면 예외가 발생한다.")
     @Test
     void deletePostAfterOffer(){
         //given
@@ -404,7 +406,7 @@ class PostServiceTest {
         return PostCreateDto.builder()
                 .carType("승용차")
                 .modelName("제네시스")
-                .deadline(5)
+                .deadline(3)
                 .location("서울시 강남구")
                 .repairService("기스, 깨짐")
                 .tuneUpService("오일 교체")
