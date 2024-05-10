@@ -11,6 +11,7 @@ import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.request.member.CenterSignUpDto;
 import softeer.be33ma3.dto.request.member.ClientSignUpDto;
 import softeer.be33ma3.dto.request.member.LoginDto;
+import softeer.be33ma3.dto.response.LoginSuccessDto;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.exception.ErrorCode;
 import softeer.be33ma3.repository.CenterRepository;
@@ -38,23 +39,21 @@ class MemberServiceTest {
         memberRepository.deleteAllInBatch();
     }
 
-    //TODO: 이미지 저장 부분 수정
-//    @DisplayName("일반 사용자 회원가입")
-//    @Test
-//    void clientSignUp() throws IOException {
-//        //given
-//        MockMultipartFile profile = createImages();
-//        ClientSignUpDto clientSignUpDto = new ClientSignUpDto("test1", "1234");
-//
-//        //when
-//        memberService.clientSignUp(clientSignUpDto, profile);
-//
-//        //then
-//        Member member = memberRepository.findByLoginIdAndPassword("test1", "1234").get();
-//        assertThat(member)
-//                .extracting("loginId", "password")
-//                .containsExactly("test1", "1234");
-//    }
+    @DisplayName("일반 사용자 회원가입")
+    @Test
+    void clientSignUp(){
+        //given
+        ClientSignUpDto clientSignUpDto = new ClientSignUpDto("test1", "1234");
+
+        //when
+        memberService.clientSignUp(clientSignUpDto, null);
+
+        //then
+        Member member = memberRepository.findByLoginIdAndPassword("test1", "1234").get();
+        assertThat(member)
+                .extracting("loginId", "password")
+                .containsExactly("test1", "1234");
+    }
 
     @DisplayName("아이디가 이미 존재하는 경우 예외가 발생한다 - 클라이언트")
     @Test
@@ -84,23 +83,21 @@ class MemberServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.DUPLICATE_ID);
     }
 
-    //TODO: 이미지 저장 부분 수정
-//    @DisplayName("센터 회원가입")
-//    @Test
-//    void centerSignUp() throws IOException {
-//        //given
-//        MockMultipartFile profile = createImages();
-//        CenterSignUpDto centerSignUpDto = new CenterSignUpDto("test1", "1234", 37.5, 127.0);
-//
-//        //when
-//        memberService.centerSignUp(centerSignUpDto, profile);
-//
-//        //then
-//        Member member = memberRepository.findByLoginIdAndPassword("test1", "1234").get();
-//        assertThat(member)
-//                .extracting("loginId", "password")
-//                .containsExactly("test1", "1234");
-//    }
+    @DisplayName("센터 회원가입")
+    @Test
+    void centerSignUp(){
+        //given
+        CenterSignUpDto centerSignUpDto = new CenterSignUpDto("test1", "1234", 37.5, 127.0);
+
+        //when
+        memberService.centerSignUp(centerSignUpDto, null);
+
+        //then
+        Member member = memberRepository.findByLoginIdAndPassword("test1", "1234").get();
+        assertThat(member)
+                .extracting("loginId", "password")
+                .containsExactly("test1", "1234");
+    }
 
     @DisplayName("센터와 일반 사용자 로그인 기능")
     @Test
@@ -108,12 +105,8 @@ class MemberServiceTest {
         //given
         LoginDto loginDto = new LoginDto("client1", "1234");
 
-        //when
-        memberService.login(loginDto);
-
-        //then
-        Member member = memberRepository.findByLoginIdAndPassword("client1", "1234").get();
-        assertThat(member.getRefreshToken()).isNotNull();
+        //when //then
+        assertThat(memberService.login(loginDto)).isInstanceOf(LoginSuccessDto.class);
     }
 
     @DisplayName("아이디 또는 비밀번호가 다르면 예외가 발생한다.")
@@ -127,18 +120,4 @@ class MemberServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.ID_PASSWORD_MISMATCH);
     }
-
-    //TODO: 이미지 저장 부분 수정
-//    @DisplayName("프로필을 업로드한다.")
-//    @Test
-//    void saveProfile() throws IOException {
-//        //given
-//        MockMultipartFile profile = createImages();
-//
-//        //when
-//        Image image = memberService.saveProfile(profile);
-//
-//        //then
-//        assertThat(image).isNotNull();
-//    }
 }

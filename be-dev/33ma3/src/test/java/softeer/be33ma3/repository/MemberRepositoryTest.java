@@ -64,6 +64,7 @@ class MemberRepositoryTest {
         //given
         Member client = Member.createClient("client1", "1234", null);
         Member savedMember = memberRepository.save(client);
+
         JwtToken jwtToken = jwtProvider.createJwtToken(savedMember.getMemberType(), savedMember.getMemberId(), savedMember.getLoginId());
         String refreshToken = jwtToken.getRefreshToken();
         savedMember.setRefreshToken(refreshToken);
