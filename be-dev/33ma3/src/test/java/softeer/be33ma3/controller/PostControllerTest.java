@@ -118,11 +118,20 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.message").value("차종은 필수입니다."));
     }
 
-    @DisplayName("게시글 생성 시 디티오에 null이 있는 경우 예외가 발생한다.")
+    @DisplayName("게시글 작성시 마감기한이 10이 넘으면 예외가 발생한다.")
     @Test
-    void createPostWithNullField() throws Exception {
+    void createPostWithOverDeadLine() throws Exception {
         //given
-        PostCreateDto postCreateDto = new PostCreateDto("스용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", null,"수정전 내용");
+        PostCreateDto postCreateDto = PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(11)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 생성")
+                .build();
 
         String request = objectMapper.writeValueAsString(postCreateDto);
 
@@ -135,8 +144,9 @@ class PostControllerTest {
                         .header("Authorization", accessToken))
                 .andDo(print())
                 .andExpect(jsonPath("$.status").value("ERROR"))
-                .andExpect(jsonPath("$.message").value("주위 센터 정보는 필수입니다."));
+                .andExpect(jsonPath("$.message").value("최대 10일까지 가능합니다."));
     }
+
 
     @DisplayName("게시글을 수정할 수 있다.")
     @Test
