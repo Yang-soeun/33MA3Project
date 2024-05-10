@@ -16,7 +16,6 @@ import softeer.be33ma3.repository.ReviewRepository;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.List;
 
 import static softeer.be33ma3.exception.ErrorCode.*;
@@ -72,7 +71,6 @@ public class PostService {
 
         if(multipartFiles != null){     //게시물에 이미지가 있는 경우
             List<Image> images = imageService.saveImages(multipartFiles);            //이미지 저장
-
             images.forEach(image -> image.setPost(savedPost));            //이미지랑 게시물 매핑하기
         }
 

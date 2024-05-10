@@ -35,9 +35,6 @@ public class ImageService {
                 .toList();
 
         List<String> fileNames = imageRepository.findFileNamesByImageIds(imageIds);
-
-        for (String fileName : fileNames) {
-            s3Service.deleteFile(fileName);
-        }
+        fileNames.forEach(s3Service::deleteFile);
     }
 }
