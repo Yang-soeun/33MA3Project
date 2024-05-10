@@ -17,7 +17,7 @@ public class Post extends BaseTimeEntity{
 
     private String carType;
 
-    private boolean done;       //낙찰 시 or 마감기한 끝난경우 true
+    private boolean done;       //낙찰 시 or 마감 기한 끝난 경우 true
 
     private int deadline;
 
@@ -47,7 +47,6 @@ public class Post extends BaseTimeEntity{
 
         post.modelName = postCreateDto.getModelName();
         post.carType = postCreateDto.getCarType();
-        post.done = false;
         post.deadline = postCreateDto.getDeadline();
         post.contents = postCreateDto.getContents();
         post.repairService = postCreateDto.getRepairService();

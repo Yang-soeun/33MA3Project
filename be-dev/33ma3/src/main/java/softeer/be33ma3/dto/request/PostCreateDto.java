@@ -20,7 +20,7 @@ public class PostCreateDto {
     @NotBlank(message = "모델명은 필수입니다.")
     private String modelName;
 
-    @NotNull(message = "마감기한은 필수입니다.")
+    @NotNull(message = "마감 기한은 필수입니다.")
     @Max(value = 10, message = "최대 10일까지 가능합니다.")
     private Integer deadline;
 
@@ -31,7 +31,7 @@ public class PostCreateDto {
 
     private String tuneUpService;
 
-    @NotNull(message = "주위 센터 정보는 필수입니다.")
+    @NotNull(message = "반경 안 센터 정보는 필수입니다.")
     private List<Long> centers;
 
     @Length(max=500, message = "내용은 최대 500글자입니다.")

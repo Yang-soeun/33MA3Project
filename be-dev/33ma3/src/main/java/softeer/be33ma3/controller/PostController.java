@@ -36,8 +36,7 @@ public class PostController {
 
 
     @PostMapping(value = "/create")
-    public ResponseEntity<?> createPost(@CurrentUser Member member,
-                                        @RequestPart(name = "images", required = false) List<MultipartFile> images,
+    public ResponseEntity<?> createPost(@CurrentUser Member member, @RequestPart(name = "images", required = false) List<MultipartFile> images,
                                         @Valid @RequestPart(name = "request") PostCreateDto postCreateDto) {
         Long postId = postService.createPost(member, postCreateDto, images);
 

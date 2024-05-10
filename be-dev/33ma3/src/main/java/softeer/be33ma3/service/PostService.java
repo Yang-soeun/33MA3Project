@@ -64,24 +64,17 @@ public class PostService {
         if(currentMember.isCenter()){   //센터인 경우 글 작성 불가능
             throw new BusinessException(POST_CREATION_DISABLED);
         }
-        Region region = getRegion(postCreateDto.getLocation()); //지역 찾기
 
-        //게시글 저장
-        Post post = Post.createPost(postCreateDto, region, currentMember);
+        Post post = Post.createPost(postCreateDto, getRegion(postCreateDto.getLocation()), currentMember);
         Post savedPost = postRepository.save(post);
 
-        //정비소랑 게시물 매핑하기
-        centerAndPostMapping(postCreateDto, savedPost);
+        centerAndPostMapping(postCreateDto, savedPost);        //정비소랑 게시물 매핑
 
-        if(multipartFiles == null){     //이미지가 없는 경우
-            return savedPost.getPostId();
+        if(multipartFiles != null){     //게시물에 이미지가 있는 경우
+            List<Image> images = imageService.saveImages(multipartFiles);            //이미지 저장
+
+            images.forEach(image -> image.setPost(savedPost));            //이미지랑 게시물 매핑하기
         }
-
-        //이미지 저장
-        List<Image> images = imageService.saveImages(multipartFiles);
-
-        //이미지랑 게시물 매핑하기
-        images.forEach(image -> image.setPost(savedPost));
 
         return savedPost.getPostId();
     }
@@ -92,6 +85,18 @@ public class PostService {
 
         Region region = getRegion(postCreateDto.getLocation());
         post.editPost(postCreateDto, region);
+    }
+
+    private Region getRegion(String location) {
+        // 정규 표현식을 사용하여 "구"로 끝나는 문자열 찾기
+        Pattern pattern = Pattern.compile("\\b([^\\s]+구)\\b");
+        Matcher matcher = pattern.matcher(location);
+
+        if (matcher.find()) {
+            return regionRepository.findByRegionName(matcher.group()).orElseThrow(() -> new BusinessException(NOT_FOUND_REGION));
+        }
+
+        throw new BusinessException(NO_DISTRICT_IN_ADDRESS);
     }
 
     @Transactional
@@ -147,24 +152,12 @@ public class PostService {
         return OfferDetailDto.fromEntity(offer.get(), score);
     }
 
-    private Region getRegion(String location) {
-        // 정규 표현식을 사용하여 "구"로 끝나는 문자열 찾기
-        Pattern pattern = Pattern.compile("\\b([^\\s]+구)\\b");
-        Matcher matcher = pattern.matcher(location);
-
-        if (matcher.find()) {
-            return regionRepository.findByRegionName(matcher.group()).orElseThrow(() -> new BusinessException(NOT_FOUND_REGION));
-        }
-
-        throw new BusinessException(NO_DISTRICT_IN_ADDRESS);
-    }
-
     private void centerAndPostMapping(PostCreateDto postCreateDto, Post savedPost) {
         List<Center> centers = centerRepository.findAllById(postCreateDto.getCenters());
 
         List<PostPerCenter> postPerCenters = centers.stream()
                 .map(center -> new PostPerCenter(center, savedPost))
-                .collect(Collectors.toList());
+                .toList();
 
         postPerCenterRepository.saveAll(postPerCenters);
     }
