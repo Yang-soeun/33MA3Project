@@ -1,4 +1,4 @@
-package softeer.be33ma3.dto.request;
+package softeer.be33ma3.dto.request.member;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

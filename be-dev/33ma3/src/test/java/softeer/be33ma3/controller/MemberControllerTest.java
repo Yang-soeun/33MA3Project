@@ -13,9 +13,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import softeer.be33ma3.domain.Member;
-import softeer.be33ma3.dto.request.CenterSignUpDto;
-import softeer.be33ma3.dto.request.ClientSignUpDto;
-import softeer.be33ma3.dto.request.LoginDto;
+import softeer.be33ma3.dto.request.member.CenterSignUpDto;
+import softeer.be33ma3.dto.request.member.ClientSignUpDto;
+import softeer.be33ma3.dto.request.member.LoginDto;
 import softeer.be33ma3.jwt.JwtProvider;
 import softeer.be33ma3.jwt.JwtToken;
 import softeer.be33ma3.repository.MemberRepository;
@@ -101,7 +101,7 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.message").value("회원가입 성공"));
     }
 
-    @DisplayName("로그인 또는 아이디가 비어있으면 회원가입 시 예외가 발생한다.")
+    @DisplayName("아이디가 비어있으면 회원가입 시 예외가 발생한다.")
     @Test
     void clientSignUpWithoutLoginId() throws Exception {
         //given
@@ -116,6 +116,23 @@ class MemberControllerTest {
                 .andDo(print())
                 .andExpect(jsonPath("$.status").value("ERROR"))
                 .andExpect(jsonPath("$.message").value("아이디는 필수입니다."));
+    }
+
+    @DisplayName("비밀번호가 비어있으면 회원가입 시 예외가 발생한다.")
+    @Test
+    void clientSignUpWithoutPassword() throws Exception {
+        //given
+        ClientSignUpDto clientSignUpDto = new ClientSignUpDto("test", "");
+        String request = objectMapper.writeValueAsString(clientSignUpDto);
+
+        //when //then
+        mockMvc.perform(multipart("/client/signUp")
+                        .file(new MockMultipartFile("request", "", "application/json", request.getBytes(StandardCharsets.UTF_8)))
+                        .accept(APPLICATION_JSON)
+                        .characterEncoding("UTF-8"))
+                .andDo(print())
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.message").value("비밀번호는 필수입니다."));
     }
 
     @DisplayName("센터, 일반 사용자 로그인 기능")

@@ -8,15 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.Member;
-import softeer.be33ma3.dto.request.CenterSignUpDto;
-import softeer.be33ma3.dto.request.ClientSignUpDto;
-import softeer.be33ma3.dto.request.LoginDto;
+import softeer.be33ma3.dto.request.member.CenterSignUpDto;
+import softeer.be33ma3.dto.request.member.ClientSignUpDto;
+import softeer.be33ma3.dto.request.member.LoginDto;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.exception.ErrorCode;
 import softeer.be33ma3.repository.CenterRepository;
 import softeer.be33ma3.repository.MemberRepository;
-
-import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -143,14 +141,4 @@ class MemberServiceTest {
 //        //then
 //        assertThat(image).isNotNull();
 //    }
-
-    @DisplayName("이미지가 null인 경우도 기본 프로필을 반환한다.")
-    @Test
-    void saveProfileWithNullImage() throws IOException {
-        //given //when
-        String image = memberService.saveProfile(null);
-
-        //then
-        assertThat(image).isNotNull();
-    }
 }

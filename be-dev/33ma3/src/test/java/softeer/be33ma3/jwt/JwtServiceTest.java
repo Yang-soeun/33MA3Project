@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import softeer.be33ma3.domain.Member;
-import softeer.be33ma3.dto.request.LoginDto;
+import softeer.be33ma3.dto.request.member.LoginDto;
 import softeer.be33ma3.dto.response.LoginSuccessDto;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.exception.ErrorCode;

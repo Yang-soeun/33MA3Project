@@ -1,7 +1,6 @@
-package softeer.be33ma3.dto.request;
+package softeer.be33ma3.dto.request.member;
 
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginDto {
+public class ClientSignUpDto {
     @NotBlank(message = "아이디는 필수입니다.")
     private String loginId;
 

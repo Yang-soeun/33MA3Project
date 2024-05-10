@@ -7,15 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import softeer.be33ma3.domain.Center;
 import softeer.be33ma3.domain.Member;
-import softeer.be33ma3.dto.request.CenterSignUpDto;
-import softeer.be33ma3.dto.request.LoginDto;
-import softeer.be33ma3.dto.request.ClientSignUpDto;
+import softeer.be33ma3.dto.request.member.CenterSignUpDto;
+import softeer.be33ma3.dto.request.member.LoginDto;
+import softeer.be33ma3.dto.request.member.ClientSignUpDto;
 import softeer.be33ma3.dto.response.LoginSuccessDto;
 import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.jwt.JwtService;
 import softeer.be33ma3.jwt.JwtToken;
 import softeer.be33ma3.repository.CenterRepository;
-import softeer.be33ma3.repository.ImageRepository;
 import softeer.be33ma3.repository.MemberRepository;
 
 import static softeer.be33ma3.exception.ErrorCode.*;
@@ -29,8 +28,6 @@ public class MemberService {
     private final CenterRepository centerRepository;
     private final JwtService jwtService;
     private final ImageService imageService;
-    private final S3Service s3Service;
-    private final ImageRepository imageRepository;
 
     @Transactional
     public void clientSignUp(ClientSignUpDto clientSignUpDto, MultipartFile profile) {
@@ -72,8 +69,7 @@ public class MemberService {
         return LoginSuccessDto.createLoginSuccessDto(member, jwtToken);
     }
 
-    @Transactional
-    public String saveProfile(MultipartFile profile) {
+    private String saveProfile(MultipartFile profile) {
         if (profile == null) {
             return DEFAULT_PROFILE; //기본 프로필
         }
