@@ -40,7 +40,7 @@ public class ReviewService {
             throw new BusinessException(NOT_DONE_POST);
         }
         // 2. 글 작성자인지 검증
-        if(!post.getMember().getMemberId().equals(member.getMemberId())) {
+        if(!post.isWriter(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
         }
         // 3. 이미 리뷰를 작성헀는지 검증

@@ -3,6 +3,7 @@ package softeer.be33ma3.dto.request;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,7 @@ public class PostCreateDto {
 
     private String tuneUpService;
 
-    @NotNull(message = "반경 안 센터 정보는 필수입니다.")
+    @NotNull(message = "주위 센터 정보는 필수입니다.")
     private List<Long> centers;
 
     @Length(max=500, message = "내용은 최대 500글자입니다.")

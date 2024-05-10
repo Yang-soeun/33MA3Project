@@ -54,8 +54,8 @@ public class PostController {
 
     @PutMapping("/{post_id}")
     public ResponseEntity<?> editPost(@CurrentUser Member member, @PathVariable("post_id") Long postId,
-                                      @RequestBody @Valid PostCreateDto postCreateDto) {
-        postService.editPost(member, postId, postCreateDto);
+                                      @RequestBody @Valid PostCreateDto postEditDto) {
+        postService.editPost(member, postId, postEditDto);
 
         return ResponseEntity.ok().body(SingleResponse.success("게시글 수정 성공"));
     }

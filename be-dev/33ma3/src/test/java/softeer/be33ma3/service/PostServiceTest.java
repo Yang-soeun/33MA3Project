@@ -1,9 +1,12 @@
 package softeer.be33ma3.service;
 
+import java.util.Collection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -74,7 +77,8 @@ class PostServiceTest {
         List<MultipartFile> multipartFiles = List.of(mockMultipartFile1);
 
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 포함");
+
+        PostCreateDto postCreateDto = createPostDto("게시글 생성 이미지 포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, multipartFiles);
@@ -90,7 +94,7 @@ class PostServiceTest {
     void createPostWithoutImage(){
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 미포함");
+        PostCreateDto postCreateDto = createPostDto("게시글 생성 이미지 미포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, null);
@@ -120,17 +124,15 @@ class PostServiceTest {
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-
         Post savedPost = savePost(region, member);
-
-        PostCreateDto postEditDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정후 내용");
+        PostCreateDto postEditDto = createPostDto("수정 후 내용");
 
         //when
         postService.editPost(member, savedPost.getPostId(), postEditDto);
 
         //then
         Post editPost = postRepository.findById(savedPost.getPostId()).get();
-        assertThat(editPost.getContents()).isEqualTo("수정후 내용");
+        assertThat(editPost.getContents()).isEqualTo("수정 후 내용");
     }
 
     @DisplayName("작성자와 다른 사람이 수정하면 예외가 발생한다.")
@@ -140,10 +142,8 @@ class PostServiceTest {
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
         Member member2 = memberRepository.findMemberByLoginId("client2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-
         Post savedPost = savePost(region, member1);
-
-        PostCreateDto postEditDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정후 내용");
+        PostCreateDto postEditDto = new PostCreateDto();
 
         //when //then
         assertThatThrownBy(() -> postService.editPost(member2, savedPost.getPostId(), postEditDto))
@@ -151,23 +151,38 @@ class PostServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTHOR_ONLY_ACCESS);
     }
 
-    @DisplayName("경매가 시작된 후에 게시글을 수정하면 예외가 발생한다.")
-    @Test
-    void editPostAfterOffer(){
+    @DisplayName("게시글 수정 시나리오")
+    @TestFactory
+    Collection<DynamicTest> editPostDynamicTest() {
         //given
         Member client = memberRepository.findMemberByLoginId("client1").get();
         Member center = memberRepository.findMemberByLoginId("center1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-
         Post savedPost = savePost(region, client);
-        saveOffer(1, "내용", savedPost, center);
 
-        PostCreateDto postEditDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정후 내용");
+        return List.of(
+                DynamicTest.dynamicTest("댓글이 달리기 전에는 게시글을 수정할 수 있다.", () -> {
+                    //given
+                    PostCreateDto postEditDto = createPostDto("수정 가능");
 
-        //when //then
-        assertThatThrownBy(() -> postService.editPost(client, savedPost.getPostId(), postEditDto))
-                .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRE_AUCTION_ONLY);
+                    //when
+                    postService.editPost(client, savedPost.getPostId(), postEditDto);
+
+                    //then
+                    Post editPost = postRepository.findById(savedPost.getPostId()).get();
+                    assertThat(editPost.getContents()).isEqualTo("수정 가능");
+                }),
+                DynamicTest.dynamicTest("댓글이 달리면 게시글을 수정할 수 없다.", () -> {
+                    //given
+                    saveOffer(1, "내용", savedPost, center);
+                    PostCreateDto postEditDto = createPostDto("수정 불가능");
+
+                    //when //then
+                    assertThatThrownBy(() -> postService.editPost(client, savedPost.getPostId(), postEditDto))
+                            .isInstanceOf(BusinessException.class)
+                            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRE_AUCTION_ONLY);
+                })
+        );
     }
 
     @DisplayName("게시글을 삭제할 수 있다.")
@@ -348,6 +363,19 @@ class PostServiceTest {
                 .latitude(0)
                 .longitude(0)
                 .member(member)
+                .build();
+    }
+
+    private static PostCreateDto createPostDto(String contents) {
+        return PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(11)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체")
+                .centers(new ArrayList<>())
+                .contents(contents)
                 .build();
     }
 }

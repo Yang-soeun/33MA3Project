@@ -66,7 +66,6 @@ public class PostService {
 
         Post post = Post.createPost(postCreateDto, getRegion(postCreateDto.getLocation()), currentMember);
         Post savedPost = postRepository.save(post);
-
         centerAndPostMapping(postCreateDto, savedPost);        //정비소랑 게시물 매핑
 
         if(multipartFiles != null){     //게시물에 이미지가 있는 경우
@@ -78,15 +77,13 @@ public class PostService {
     }
 
     @Transactional
-    public void editPost(Member member, Long postId, PostCreateDto postCreateDto) {
+    public void editPost(Member member, Long postId, PostCreateDto postEditDto) {
         Post post = validPostAndMember(member, postId);
-
-        Region region = getRegion(postCreateDto.getLocation());
-        post.editPost(postCreateDto, region);
+        Region region = getRegion(postEditDto.getLocation());
+        post.editPost(postEditDto, region);
     }
 
     private Region getRegion(String location) {
-        // 정규 표현식을 사용하여 "구"로 끝나는 문자열 찾기
         Pattern pattern = Pattern.compile("\\b([^\\s]+구)\\b");
         Matcher matcher = pattern.matcher(location);
 
@@ -104,8 +101,20 @@ public class PostService {
         List<Image> images = post.getImages();
         imageService.deleteImage(images);   //S3에서 이미지 삭제
         imageRepository.deleteAll(images);  //db에 저장된 이미지 삭제
-        //게시글 삭제
-        postRepository.delete(post);
+
+        postRepository.delete(post);    //게시글 삭제
+    }
+
+    private Post validPostAndMember(Member member, Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
+
+        if (!post.isWriter(member.getMemberId())) {     //작성자가 아닌 경우
+            throw new BusinessException(AUTHOR_ONLY_ACCESS);
+        }
+        if (!post.getOffers().isEmpty()) { //댓글이 있는 경우(경매 시작 후)
+            throw new BusinessException(PRE_AUCTION_ONLY);
+        }
+        return post;
     }
 
     // 게시글 세부사항 반환 (로그인 하지 않아도 확인 가능)
@@ -158,17 +167,5 @@ public class PostService {
                 .toList();
 
         postPerCenterRepository.saveAll(postPerCenters);
-    }
-
-    private Post validPostAndMember(Member member, Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
-
-        if (!post.getMember().getMemberId().equals(member.getMemberId())) {
-            throw new BusinessException(AUTHOR_ONLY_ACCESS);
-        }
-        if (!post.getOffers().isEmpty()) { //댓글이 있는 경우(경매 시작 후)
-            throw new BusinessException(PRE_AUCTION_ONLY);
-        }
-        return post;
     }
 }
