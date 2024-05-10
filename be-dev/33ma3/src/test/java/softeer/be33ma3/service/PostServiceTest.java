@@ -32,6 +32,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -183,6 +184,24 @@ class PostServiceTest {
                             .hasFieldOrPropertyWithValue("errorCode", ErrorCode.PRE_AUCTION_ONLY);
                 })
         );
+    }
+
+    @DisplayName("존재하지 않는 게시글을 수정하려고 하면 예외가 발생한다.")
+    @Test
+    void editPostWithNoExistPos(){
+        //given
+        Member client = memberRepository.findMemberByLoginId("client1").get();
+        Region region = regionRepository.findByRegionName("강남구").get();
+        Post savedPost = savePost(region, client);
+
+        Long postId = savedPost.getPostId() + 1L;
+        PostCreateDto postEditDto = createPostDto("수정 불가능");
+
+        //when //then
+        assertThatThrownBy(() -> postService.editPost(client, postId, postEditDto))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_POST);
+
     }
 
     @DisplayName("게시글을 삭제할 수 있다.")
