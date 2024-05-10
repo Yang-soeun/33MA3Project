@@ -170,7 +170,8 @@ class MemberControllerTest {
                         .contentType(APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("토큰 재발급 성공"));
+                .andExpect(jsonPath("$.message").value("토큰 재발급 성공"))
+                .andExpect(jsonPath("$.data").isString());
     }
 
     private MockMultipartFile createImages() throws IOException {
