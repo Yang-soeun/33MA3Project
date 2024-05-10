@@ -4,11 +4,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,8 +22,6 @@ import softeer.be33ma3.exception.BusinessException;
 import softeer.be33ma3.exception.ErrorCode;
 import softeer.be33ma3.repository.*;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +43,7 @@ class PostServiceTest {
     @Autowired private ImageRepository imageRepository;
     @Autowired private OfferRepository offerRepository;
     @Autowired private CenterRepository centerRepository;
+    @MockBean private ImageService imageService;
 
     @BeforeEach
     void setUp(){
@@ -66,45 +66,47 @@ class PostServiceTest {
         regionRepository.deleteAllInBatch();
     }
 
-    //TODO: 이미지 저장 부분 수정
-//    @DisplayName("게시글을 생성할 수 있다.")
-//    @Test
-//    void createPostWithImage() throws IOException {
-//        //given
-//        List<MultipartFile> multipartFiles = createMultipartFile();
-//
-//        Member member = memberRepository.findMemberByLoginId("client1").get();
-//        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 포함");
-//
-//        //when
-//        Long postId = postService.createPost(member, postCreateDto, multipartFiles);
-//
-//        //then
-//        Post post = postRepository.findById(postId).get();
-//        assertThat(post.getContents()).isEqualTo("게시글 생성 이미지 포함");
-//    }
+    @DisplayName("게시글을 생성할 수 있다.")
+    @Test
+    void createPostWithImage(){
+        //given
+        MultipartFile mockMultipartFile1 = Mockito.mock(MultipartFile.class);
+        List<MultipartFile> multipartFiles = List.of(mockMultipartFile1);
+
+        Member member = memberRepository.findMemberByLoginId("client1").get();
+        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일, 교체", new ArrayList<>(),"게시글 생성 이미지 포함");
+
+        //when
+        Long postId = postService.createPost(member, postCreateDto, multipartFiles);
+
+        //then
+        Post post = postRepository.findById(postId).get();
+        assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
+                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일, 교체", "게시글 생성 이미지 포함");
+    }
 
     @DisplayName("이미지 없이 게시글을 생성할 수 있다.")
     @Test
     void createPostWithoutImage(){
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성 이미지 미포함");
+        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일, 교체", new ArrayList<>(),"게시글 생성 이미지 미포함");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, null);
 
         //then
         Post post = postRepository.findById(postId).get();
-        assertThat(post.getContents()).isEqualTo("게시글 생성 이미지 미포함");
+        assertThat(post).extracting("carType", "modelName", "deadline", "repairService", "tuneUpService", "contents")
+                .containsExactly("승용차", "제네시스", 3, "기스, 깨짐", "오일, 교체", "게시글 생성 이미지 미포함");
     }
 
-    @DisplayName("센터가 글을 작성하려고 하면 예외가 발생한다.")
+    @DisplayName("센터가 글을 작성하면 예외가 발생한다.")
     @Test
     void createPostWithCenter(){
         //given
         Member member = memberRepository.findMemberByLoginId("center1").get();
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"게시글 생성");
+        PostCreateDto postCreateDto = new PostCreateDto();
 
         //when  //then
         assertThatThrownBy(() -> postService.createPost(member, postCreateDto, null))
@@ -323,25 +325,6 @@ class PostServiceTest {
         List<PostThumbnailDto> actual = postService.showPosts(null, null, null, null, null, center1);
         // then
         assertThat(actual).hasSize(1);
-    }
-
-    private List<MultipartFile> createMultipartFile() throws IOException {
-        String fileName = "testImage"; //파일명
-        String contentType = "jpg"; //파일타입
-        String filePath = "src/test/resources/testImage/"+fileName+"."+contentType;
-
-        FileInputStream fileInputStream = new FileInputStream(filePath);
-        List<MultipartFile> multipartFiles = new ArrayList<>();
-
-        MockMultipartFile multipartFile = new MockMultipartFile(
-                "images",
-                fileName + "." + contentType,
-                contentType,
-                fileInputStream
-        );
-
-        multipartFiles.add(multipartFile);
-        return multipartFiles;
     }
 
     private Post savePost(Region region, Member member) {
