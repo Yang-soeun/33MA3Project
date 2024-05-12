@@ -53,7 +53,6 @@ public class PostService {
         return fromPostList(posts);
     }
 
-    // List<Post> -> List<PostThumbnailDto>로 변환
     private List<PostThumbnailDto> fromPostList(List<Post> posts) {
         return posts.stream()
                 .map(PostThumbnailDto::fromEntity).toList();
@@ -145,18 +144,19 @@ public class PostService {
         return postWithAvgPriceDto;
     }
 
-    // 멤버 정보를 이용하여 견적을 작성한 이력이 있는 서비스 센터일 경우 작성한 견적 반환
-    // 해당사항 없을 경우 null 반환
+    // 견적을 작성한 이력이 있는 서비스 센터일 경우 작성한 견적 반환
+    // 해당사항 없을 경우 null 반환(클라이언트 또는 견적을 작성한적 없는 경우)
     private OfferDetailDto getCenterOffer(Long postId, Member member) {
-        if(member == null || member.isClient())
-            return null;
-        // 해당 게시글에 해당 센터가 작성한 견적 찾기
-        Optional<Offer> offer = offerRepository.findByPost_PostIdAndCenter_MemberId(postId, member.getMemberId());
-        if(offer.isEmpty()) {
-            return null;
+        if (!member.isClient()) {
+            return offerRepository.findByPost_PostIdAndCenter_MemberId(postId, member.getMemberId())
+                    .map(offer -> {
+                        Double score = reviewRepository.findAvgScoreByCenterId(offer.getCenter().getMemberId()).orElse(0.0);
+                        return OfferDetailDto.fromEntity(offer, score);
+                    })
+                    .orElse(null);
         }
-        Double score = reviewRepository.findAvgScoreByCenterId(offer.get().getCenter().getMemberId()).orElse(0.0);
-        return OfferDetailDto.fromEntity(offer.get(), score);
+
+        return null;
     }
 
     private void centerAndPostMapping(PostCreateDto postCreateDto, Post savedPost) {
