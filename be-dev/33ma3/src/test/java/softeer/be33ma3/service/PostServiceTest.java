@@ -409,7 +409,7 @@ class PostServiceTest {
                 .carType("승용차")
                 .modelName("제네시스")
                 .deadline(3)
-                .location("서울시 강남구")
+                .location(location)
                 .repairService("기스, 깨짐")
                 .tuneUpService("오일 교체")
                 .centers(new ArrayList<>())
