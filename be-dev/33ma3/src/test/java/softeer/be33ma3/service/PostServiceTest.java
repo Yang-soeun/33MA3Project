@@ -1,6 +1,7 @@
 package softeer.be33ma3.service;
 
 import java.util.Collection;
+import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import softeer.be33ma3.domain.*;
 import softeer.be33ma3.dto.request.PostCreateDto;
@@ -280,10 +282,31 @@ class PostServiceTest {
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
         Post savedPost = savePost(region, member1);
-        // when
-        Object actual = postService.showPost(savedPost.getPostId(), member1);
-        // then
-        assertThat(actual).isInstanceOf(PostWithOffersDto.class);
+        // when // then
+        assertThat(postService.showPost(savedPost.getPostId(), member1)).isInstanceOf(PostWithOffersDto.class);
+    }
+
+    @DisplayName("게시글 조회 시나리오")
+    @TestFactory
+    @Transactional
+    Collection<DynamicTest> showPost_WithNotUser(){
+        //given
+        Region region = regionRepository.findByRegionName("강남구").get();
+        Member writer = memberRepository.findMemberByLoginId("client1").get();
+        Post savedPost = savePost(region, writer);
+
+        return List.of(DynamicTest.dynamicTest("로그인 하지 않은 유저는 경매가 진행중인 게시글을 조회하는 경우 예외가 발생한다.", () -> {
+            //when //then
+            assertThatThrownBy(() -> postService.showPost(savedPost.getPostId(), null))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_REQUIRED);
+        }), DynamicTest.dynamicTest("로그인 하지 않은 유저는 경매가 마감된 게시글의 견적을 볼 수 있다.", () -> {
+            //given
+            savedPost.setDone();
+
+            //then //then
+            assertThat(postService.showPost(savedPost.getPostId(), null)).isInstanceOf(PostWithOffersDto.class);
+        }));
     }
 
     @Test

@@ -191,9 +191,7 @@ class OfferRepositoryTest {
     @DisplayName("해당 게시글에 견적을 제시한 모든 센터의 멤버 아이디를 가져온다.")
     void findCenterMemberIdsByPost_PostId() {
         // given
-        // post 저장히기
         Post savedPost = savePost(null);
-        // offer 저장하기
         Member center1 = saveMember(2, "center1", "center1");
         Member center2 = saveMember(2, "center2", "center2");
         Member center3 = saveMember(2, "center3", "center3");
@@ -202,10 +200,12 @@ class OfferRepositoryTest {
         saveOffer(2, "offer2", savedPost, center2);
         saveOffer(2, "offer3", savedPost, center3);
         saveOffer(2, "offer4", savedPost, center4);
-        List<Long> expected = List.of(center1.getMemberId(), center2.getMemberId(), center3.getMemberId(), center4.getMemberId());
+
         // when
         List<Long> actual = offerRepository.findCenterMemberIdsByPost_PostId(savedPost.getPostId());
+
         // then
+        List<Long> expected = List.of(center1.getMemberId(), center2.getMemberId(), center3.getMemberId(), center4.getMemberId());
         assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 

@@ -14,7 +14,6 @@ import softeer.be33ma3.repository.offer.OfferRepository;
 import softeer.be33ma3.repository.post.PostRepository;
 import softeer.be33ma3.repository.review.ReviewRepository;
 
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.List;
@@ -119,6 +118,7 @@ public class PostService {
 
     public Object showPost(Long postId, Member member) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
+
         if (member == null && !post.isDone()) {     //진행중인 경매는 로그인 한 사용자만 볼 수 있다.
             throw new BusinessException(LOGIN_REQUIRED);
         }
