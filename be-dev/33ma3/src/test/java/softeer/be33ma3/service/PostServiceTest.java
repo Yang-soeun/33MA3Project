@@ -1,7 +1,6 @@
 package softeer.be33ma3.service;
 
 import java.util.Collection;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +33,7 @@ import softeer.be33ma3.repository.post.PostRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -64,7 +64,8 @@ class PostServiceTest {
         Member member1 = Member.createClient( "client1", "1234", null);
         Member member2 = Member.createClient( "client2", "1234", null);
         Member member3 = Member.createCenter( "center1", "1234", null);
-        memberRepository.saveAll(List.of(member1, member2, member3));
+        Member member4 = Member.createCenter( "center2", "1234", null);
+        memberRepository.saveAll(List.of(member1, member2, member3, member4));
         regionRepository.save(new Region(1L, "강남구"));
     }
 
@@ -197,7 +198,7 @@ class PostServiceTest {
                 }),
                 DynamicTest.dynamicTest("댓글이 달리면 게시글을 수정할 수 없다.", () -> {
                     //given
-                    saveOffer(1, "내용", savedPost, center);
+                    saveOffer(1, savedPost, center);
                     PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능");
 
                     //when //then
@@ -267,7 +268,7 @@ class PostServiceTest {
         Region region = regionRepository.findByRegionName("강남구").get();
 
         Post savedPost = savePost(region, client);
-        saveOffer(1, "내용", savedPost, center);
+        saveOffer(1, savedPost, center);
 
         //when //then
         assertThatThrownBy(() -> postService.deletePost(client, savedPost.getPostId()))
@@ -276,37 +277,42 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("게시글 작성자의 게시글 조회 요청 시 모든 댓글 목록과 함께 조회 가능하다.")
-    void showPost_withWriter() {
+    @DisplayName("게시글 작성자는 조회 시 모든 견적 목록과 함께 조회 가능하다.")
+    void showPostWithWriter(){
         // given
-        Member member1 = memberRepository.findMemberByLoginId("client1").get();
+        Member writer = memberRepository.findMemberByLoginId("client1").get();
+        Member center1 = memberRepository.findMemberByLoginId("center1").get();
+        Member center2 = memberRepository.findMemberByLoginId("center2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, member1);
-        // when // then
-        assertThat(postService.showPost(savedPost.getPostId(), member1)).isInstanceOf(PostWithOffersDto.class);
+        Post savedPost = savePost(region, writer);
+
+        saveOffer(10000, savedPost, center1);
+        saveOffer(20000, savedPost, center2);
+
+        // when
+        Object result = postService.showPost(savedPost.getPostId(), writer);
+
+        // then
+        assertThat(result).isInstanceOf(PostWithOffersDto.class);
+        PostWithOffersDto postWithOffersDto = (PostWithOffersDto) result;
+        assertThat(postWithOffersDto.getOfferDetails()).hasSize(2)
+                .extracting("centerName", "price")
+                .containsExactly(tuple("center1", 10000),
+                        tuple("center2", 20000));
     }
 
-    @DisplayName("게시글 조회 시나리오")
-    @TestFactory
-    @Transactional
-    Collection<DynamicTest> showPost_WithNotUser(){
+    @DisplayName("경매가 진행중인 게시글을 로그인하지 않은 사용자가 조회 시 예외가 발생한다.")
+    @Test
+    void showPostWithNotUser() {
         //given
         Region region = regionRepository.findByRegionName("강남구").get();
         Member writer = memberRepository.findMemberByLoginId("client1").get();
         Post savedPost = savePost(region, writer);
 
-        return List.of(DynamicTest.dynamicTest("로그인 하지 않은 유저는 경매가 진행중인 게시글을 조회하는 경우 예외가 발생한다.", () -> {
-            //when //then
-            assertThatThrownBy(() -> postService.showPost(savedPost.getPostId(), null))
-                    .isInstanceOf(BusinessException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_REQUIRED);
-        }), DynamicTest.dynamicTest("로그인 하지 않은 유저는 경매가 마감된 게시글의 견적을 볼 수 있다.", () -> {
-            //given
-            savedPost.setDone();
-
-            //then //then
-            assertThat(postService.showPost(savedPost.getPostId(), null)).isInstanceOf(PostWithOffersDto.class);
-        }));
+        //when //then
+        assertThatThrownBy(() -> postService.showPost(savedPost.getPostId(), null))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_REQUIRED);
     }
 
     @Test
@@ -318,8 +324,10 @@ class PostServiceTest {
         Post post = savePost(region, member1);
         post.setDone();
         Post savedPost = postRepository.save(post);
+
         // when
         Object actual = postService.showPost(savedPost.getPostId(), null);
+
         // then
         assertThat(actual).isInstanceOf(PostWithOffersDto.class);
     }
@@ -409,10 +417,10 @@ class PostServiceTest {
         return postRepository.save(post);
     }
 
-    private Offer saveOffer(int price, String contents, Post post, Member center) {
+    private Offer saveOffer(int price, Post post, Member center) {
         Offer offer = Offer.builder()
                 .price(price)
-                .contents(contents)
+                .contents("견적 제시")
                 .post(post)
                 .center(center).build();
 
