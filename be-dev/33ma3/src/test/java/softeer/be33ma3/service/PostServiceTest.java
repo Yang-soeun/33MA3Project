@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import softeer.be33ma3.domain.*;
 import softeer.be33ma3.dto.request.PostCreateDto;
@@ -317,34 +316,44 @@ class PostServiceTest {
 
     @Test
     @DisplayName("경매 마감된 게시글 조회 요청 시 모든 유저가 모든 댓글 목록과 함께 조회 가능하다.")
-    void showPost_withDonePost() {
+    void showPostWithDonePost() {
         // given
-        Member member1 = memberRepository.findMemberByLoginId("client1").get();
+        Member writer = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post post = savePost(region, member1);
+        Post post = savePost(region, writer);
         post.setDone();
         Post savedPost = postRepository.save(post);
 
         // when
-        Object actual = postService.showPost(savedPost.getPostId(), null);
+        Object result = postService.showPost(savedPost.getPostId(), null);
 
         // then
-        assertThat(actual).isInstanceOf(PostWithOffersDto.class);
+        assertThat(result).isInstanceOf(PostWithOffersDto.class);
     }
 
     @Test
-    @DisplayName("경매에 참여햐지 않은 유저의 경매 중인 게시글 조회 요청 시 평균 제시가와 함께 조회 가능하다")
+    @DisplayName("경매에 참여하지 않은 유저가 경매가 진행중인 게시글 조회 요청 시 평균 제시가만 조회 가능하다")
     void showPost_withNotDonePostAndNotParticipant() {
         // given
-        Member member1 = memberRepository.findMemberByLoginId("client1").get();
+        Member writer = memberRepository.findMemberByLoginId("client1").get();
+        Member client2 = memberRepository.findMemberByLoginId("client2").get();
+        Member center1 = memberRepository.findMemberByLoginId("center1").get();
+        Member center2 = memberRepository.findMemberByLoginId("center2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post post = savePost(region, member1);
-        Member member2 = memberRepository.findMemberByLoginId("client2").get();
+        Post savedPost = savePost(region, writer);
+
+        saveOffer(10000, savedPost, center1);
+        saveOffer(20000, savedPost, center2);
+
         // when
-        Object actual = postService.showPost(post.getPostId(), member2);
+        Object result = postService.showPost(savedPost.getPostId(), client2);
+
         // then
-        assertThat(actual).isInstanceOf(PostWithAvgPriceDto.class);
-        assertThat(actual).extracting("offerDetail").isNull();
+        PostWithAvgPriceDto postWithAvgPrice = (PostWithAvgPriceDto) result;
+        assertThat(result).isInstanceOf(PostWithAvgPriceDto.class);
+        assertThat(postWithAvgPrice)
+                .extracting("avgPrice", "offerDetail")
+                .containsExactly(15000.0, null);
     }
 
     @Test
