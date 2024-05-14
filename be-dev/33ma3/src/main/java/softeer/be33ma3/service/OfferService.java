@@ -71,7 +71,6 @@ public class OfferService {
     @Transactional
     public void updateOffer(Long postId, Long offerId, OfferCreateDto offerCreateDto, Member member) {
         Post post = checkNotDonePost(postId);
-
         Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId)
                 .orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
 
@@ -94,7 +93,7 @@ public class OfferService {
         Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId)
                 .orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
 
-        if (!offer.getCenter().getMemberId().equals(member.getMemberId())) {
+        if (!offer.isWriter(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
         }
 
