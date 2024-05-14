@@ -2,6 +2,7 @@ package softeer.be33ma3.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,12 @@ class OfferControllerTest {
     @Autowired private MemberRepository memberRepository;
     private static String accessToken;
 
+    @BeforeEach
+    void setUp(){
+        Member member = Member.createClient("테스트", "1234", null);
+        Member savedMember = memberRepository.save(member);
+        accessToken = jwtProvider.createAccessToken(savedMember.getMemberType(), savedMember.getMemberId(), savedMember.getLoginId());
+    }
     @AfterEach
     void tearDown() {
         memberRepository.deleteAllInBatch();
@@ -45,10 +52,10 @@ class OfferControllerTest {
     @DisplayName("해당하는 댓글 세부사항을 반환한다.")
     void showOffer() throws Exception {
         // given
-        saveLoginClient("user1", "user1");
         OfferDetailDto mockOfferDetailDto = OfferDetailDto.builder().offerId(1L).build();
         when(offerService.showOffer(eq(1L), eq(1L))).thenReturn(mockOfferDetailDto);
-        // when & then
+
+        // when // then
         mockMvc.perform(get("/post/{post_id}/offer/{offer_id}", 1L, 1L)
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
@@ -62,9 +69,8 @@ class OfferControllerTest {
     void createOffer() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "offer"); // 생성에 필요한 DTO 객체 생성
-        Member member = saveLoginClient("user1", "user1");
 
-        // when & then
+        // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto)) // DTO 객체를 JSON 문자열로 변환하여 요청 본문에 추가
@@ -79,8 +85,8 @@ class OfferControllerTest {
     void createOffer_withSmallPrice() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(0, "offer");
-        Member member = saveLoginClient("user1", "user1");
-        // when & then
+
+        // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto))
@@ -95,8 +101,8 @@ class OfferControllerTest {
     void createOffer_withPrice1() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(1, "offer");
-        Member member = saveLoginClient("user1", "user1");
-        // when & then
+
+        // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto))
@@ -111,8 +117,8 @@ class OfferControllerTest {
     void createOffer_withBigPrice() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(1001, "offer");
-        Member member = saveLoginClient("user1", "user1");
-        // when & then
+
+        // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto))
@@ -127,8 +133,8 @@ class OfferControllerTest {
     void createOffer_withPrice1000() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(1000, "offer");
-        Member member = saveLoginClient("user1", "user1");
-        // when & then
+
+        // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto))
@@ -143,9 +149,8 @@ class OfferControllerTest {
     void updateOffer() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "offer"); // 수정에 필요한 DTO 객체 생성
-        Member member = saveLoginClient("user1", "user1");
 
-        // when & then
+        // when // then
         mockMvc.perform(patch("/post/{post_id}/offer/{offer_id}", 1L, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerCreateDto)) // DTO 객체를 JSON 문자열로 변환하여 요청 본문에 추가
@@ -158,10 +163,7 @@ class OfferControllerTest {
     @Test
     @DisplayName("해당 댓글을 삭제할 수 있다.")
     void deleteOffer() throws Exception {
-        // given
-        Member member = saveLoginClient("user1", "user1");
-
-        // when & then
+        // given // when // then
         mockMvc.perform(delete("/post/{post_id}/offer/{offer_id}", 1L, 1L)
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
@@ -172,21 +174,11 @@ class OfferControllerTest {
     @Test
     @DisplayName("해당 댓글을 낙찰할 수 있다.")
     void selectOffer() throws Exception {
-        // given
-        Member member = saveLoginClient("user1", "user1");
-
-        // when & then
+        // given // when // then
         mockMvc.perform(get("/post/{post_id}/offer/{offer_id}/select", 1L, 1L)
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("낙찰 완료, 게시글 마감"));
-    }
-
-    private Member saveLoginClient(String loginId, String password) {
-        Member client = Member.createClient(loginId, password, null);
-        Member savedClient = memberRepository.save(client);
-        accessToken = jwtProvider.createAccessToken(savedClient.getMemberType(), savedClient.getMemberId(), savedClient.getLoginId());
-        return savedClient;
     }
 }
