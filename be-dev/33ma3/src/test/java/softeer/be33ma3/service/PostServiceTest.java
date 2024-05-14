@@ -87,7 +87,7 @@ class PostServiceTest {
         List<MultipartFile> multipartFiles = List.of(mockMultipartFile1);
 
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 포함");
+        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 포함", "기스, 깨짐", "오일 교체");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, multipartFiles);
@@ -104,7 +104,7 @@ class PostServiceTest {
     void createPostWithoutImage(){
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 미포함");
+        PostCreateDto postCreateDto = createPostDto(LOCATION,"게시글 생성 이미지 미포함", "기스, 깨짐", "오일 교체");
 
         //when
         Long postId = postService.createPost(member, postCreateDto, null);
@@ -120,7 +120,7 @@ class PostServiceTest {
     void createPostWithUnknownRegion(){
         //given
         Member member = memberRepository.findMemberByLoginId("center1").get();
-        PostCreateDto postCreateDto = createPostDto("서울시 없는구", "게시글 작성 불가능");
+        PostCreateDto postCreateDto = createPostDto("서울시 없는구", "게시글 작성 불가능", "기스, 깨짐", "오일 교체");
 
         //when  //then
         assertThatThrownBy(() -> postService.createPost(member, postCreateDto, null))
@@ -147,8 +147,8 @@ class PostServiceTest {
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, member);
-        PostCreateDto postEditDto = createPostDto(LOCATION,"수정 후 내용");
+        Post savedPost = savePost(region, member,"기스, 깨짐", "오일 교체");
+        PostCreateDto postEditDto = createPostDto(LOCATION,"수정 후 내용", "기스, 깨짐", "오일 교체");
 
         //when
         postService.editPost(member, savedPost.getPostId(), postEditDto);
@@ -165,7 +165,7 @@ class PostServiceTest {
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
         Member member2 = memberRepository.findMemberByLoginId("client2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, member1);
+        Post savedPost = savePost(region, member1,"기스, 깨짐", "오일 교체");
         PostCreateDto postEditDto = new PostCreateDto();
 
         //when //then
@@ -181,12 +181,12 @@ class PostServiceTest {
         Member client = memberRepository.findMemberByLoginId("client1").get();
         Member center = memberRepository.findMemberByLoginId("center1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, client);
+        Post savedPost = savePost(region, client,"기스, 깨짐", "오일 교체");
 
         return List.of(
                 DynamicTest.dynamicTest("댓글이 달리기 전에는 게시글을 수정할 수 있다.", () -> {
                     //given
-                    PostCreateDto postEditDto = createPostDto(LOCATION,"수정 가능");
+                    PostCreateDto postEditDto = createPostDto(LOCATION,"수정 가능", "기스, 깨짐", "오일 교체");
 
                     //when
                     postService.editPost(client, savedPost.getPostId(), postEditDto);
@@ -198,7 +198,7 @@ class PostServiceTest {
                 DynamicTest.dynamicTest("댓글이 달리면 게시글을 수정할 수 없다.", () -> {
                     //given
                     saveOffer(1, savedPost, center);
-                    PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능");
+                    PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능", "기스, 깨짐", "오일 교체");
 
                     //when //then
                     assertThatThrownBy(() -> postService.editPost(client, savedPost.getPostId(), postEditDto))
@@ -214,10 +214,10 @@ class PostServiceTest {
         //given
         Member client = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, client);
+        Post savedPost = savePost(region, client, "기스, 깨짐", "오일 교체");
 
         Long postId = savedPost.getPostId() + 1L;
-        PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능");
+        PostCreateDto postEditDto = createPostDto(LOCATION, "수정 불가능", "기스, 깨짐", "오일 교체");
 
         //when //then
         assertThatThrownBy(() -> postService.editPost(client, postId, postEditDto))
@@ -232,7 +232,7 @@ class PostServiceTest {
         //given
         Member member = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, member);
+        Post savedPost = savePost(region, member,"기스, 깨짐", "오일 교체");
 
         //when
         postService.deletePost(member, savedPost.getPostId());
@@ -250,7 +250,7 @@ class PostServiceTest {
         Member member2 = memberRepository.findMemberByLoginId("client2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
 
-        Post savedPost = savePost(region, member1);
+        Post savedPost = savePost(region, member1,"기스, 깨짐", "오일 교체");
 
         //when //then
         assertThatThrownBy(() -> postService.deletePost(member2, savedPost.getPostId()))
@@ -266,7 +266,7 @@ class PostServiceTest {
         Member center = memberRepository.findMemberByLoginId("center1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
 
-        Post savedPost = savePost(region, client);
+        Post savedPost = savePost(region, client,"기스, 깨짐", "오일 교체");
         saveOffer(1, savedPost, center);
 
         //when //then
@@ -283,7 +283,7 @@ class PostServiceTest {
         Member center1 = memberRepository.findMemberByLoginId("center1").get();
         Member center2 = memberRepository.findMemberByLoginId("center2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, writer);
+        Post savedPost = savePost(region, writer,"기스, 깨짐", "오일 교체");
 
         saveOffer(10000, savedPost, center1);
         saveOffer(20000, savedPost, center2);
@@ -306,7 +306,7 @@ class PostServiceTest {
         //given
         Region region = regionRepository.findByRegionName("강남구").get();
         Member writer = memberRepository.findMemberByLoginId("client1").get();
-        Post savedPost = savePost(region, writer);
+        Post savedPost = savePost(region, writer,"기스, 깨짐", "오일 교체");
 
         //when //then
         assertThatThrownBy(() -> postService.showPost(savedPost.getPostId(), null))
@@ -320,7 +320,7 @@ class PostServiceTest {
         // given
         Member writer = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post post = savePost(region, writer);
+        Post post = savePost(region, writer, "기스, 깨짐", "오일 교체");
         post.setDone();
         Post savedPost = postRepository.save(post);
 
@@ -340,7 +340,7 @@ class PostServiceTest {
         Member center1 = memberRepository.findMemberByLoginId("center1").get();
         Member center2 = memberRepository.findMemberByLoginId("center2").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post savedPost = savePost(region, writer);
+        Post savedPost = savePost(region, writer, "기스, 깨짐", "오일 교체");
 
         saveOffer(10000, savedPost, center1);
         saveOffer(20000, savedPost, center2);
@@ -374,7 +374,7 @@ class PostServiceTest {
         // given
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post post = savePost(region, member1);
+        Post post = savePost(region, member1, null, null);
 
         // when
         assertThatThrownBy(() -> postService.showPost(post.getPostId(), null))
@@ -383,18 +383,18 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("센터가 아닌 유저가 다중 조건 선택에 따른 게시글 목록을 조회할 수 있다.")
+    @DisplayName("유저(클라이언트)가 조건에 따른 게시글 목록을 조회할 수 있다.")
     void showPosts_byNotCenter() {
         // given
-        PostCreateDto postCreateDto1 = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"내용");
         Region region = regionRepository.findByRegionName("강남구").get();
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
-        Post post1 = Post.createPost(postCreateDto1, region, member1);
-        PostCreateDto postCreateDto2 = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "판금, 덴트", "타이어 교체", new ArrayList<>(),"내용");
-        Post post2 = Post.createPost(postCreateDto2, region, member1);
-        postRepository.saveAll(List.of(post1, post2));
+
+        savePost(region, member1, "기스, 깨짐", "오일 교체");
+        savePost(region, member1, "판금, 텐트", "타이어 교체");
+
         // when
         List<PostThumbnailDto> actual = postService.showPosts(true, false, "강남구", "판금", "타이어 교체", member1);
+
         // then
         assertThat(actual).hasSize(1);
     }
@@ -403,26 +403,25 @@ class PostServiceTest {
     @DisplayName("센터가 다중 조건 선택에 따른 게시글 목록을 조회할 수 있다.")
     void showPosts_byCenter() {
         // given
-        Member center = Member.createCenter("center1", "center1", null);
-        Member center1 = memberRepository.save(center);
-        Center center2 = centerRepository.save(createCenter(center1));
-
+        Member centerMember = memberRepository.findMemberByLoginId("center1").get();
+        Center center = centerRepository.save(createCenter(centerMember));
         Member client = memberRepository.findMemberByLoginId("client1").get();
-        PostCreateDto postCreateDto1 = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "기스, 깨짐", "오일 교체", new ArrayList<>(),"내용");
+
         Region region = regionRepository.findByRegionName("강남구").get();
-        Post post1 = Post.createPost(postCreateDto1, region, client);
-        PostCreateDto postCreateDto2 = new PostCreateDto("승용차", "제네시스", 3, "서울시 강남구", "판금, 덴트", "타이어 교체", List.of(center2.getCenterId()),"내용");
-        Post post2 = Post.createPost(postCreateDto2, region, client);
-        postRepository.saveAll(List.of(post1, post2));
-        postPerCenterRepository.save(new PostPerCenter(center2, post2));
+        Post post1 = savePost(region, client,"기스, 깨짐", "오일 교체");
+        Post post2 = savePost(region, client,"기스, 깨짐", "오일 교체");
+
+        postPerCenterRepository.save(new PostPerCenter(center, post2));
+
         // when
-        List<PostThumbnailDto> actual = postService.showPosts(null, null, null, null, null, center1);
+        List<PostThumbnailDto> actual = postService.showPosts(null, null, null, null, null, centerMember);
+
         // then
         assertThat(actual).hasSize(1);
     }
 
-    private Post savePost(Region region, Member member) {
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 3, "서울시 " + region.getRegionName(), "기스, 깨짐", "오일 교체", new ArrayList<>(),"수정전 내용");
+    private Post savePost(Region region, Member member, String repairService, String tuneUpService) {
+        PostCreateDto postCreateDto = createPostDto(LOCATION, "내용", repairService, tuneUpService);
         Post post = Post.createPost(postCreateDto, region, member);
         return postRepository.save(post);
     }
@@ -445,14 +444,14 @@ class PostServiceTest {
                 .build();
     }
 
-    private static PostCreateDto createPostDto(String location, String contents) {
+    private static PostCreateDto createPostDto(String location, String contents, String repairService, String tuneUpService) {
         return PostCreateDto.builder()
                 .carType("승용차")
                 .modelName("제네시스")
                 .deadline(3)
                 .location(location)
-                .repairService("기스, 깨짐")
-                .tuneUpService("오일 교체")
+                .repairService(repairService)
+                .tuneUpService(tuneUpService)
                 .centers(new ArrayList<>())
                 .contents(contents)
                 .build();
