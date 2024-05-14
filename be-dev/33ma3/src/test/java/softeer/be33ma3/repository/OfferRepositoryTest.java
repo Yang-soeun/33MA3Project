@@ -36,19 +36,20 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("post id를 이용하여 게시글에 속해있는 모든 댓글 목록을 가져올 수 있다.")
+    @DisplayName("게시글 아이디를 이용하여 해당 게시글의 모든 댓글 목록을 가져올 수 있다.")
     void findByPost_PostId() {
         // given
-        // post 저장
         Post savedPost = savePost(null);
-        // offer 저장
         saveOffer(1, "offer1", savedPost, null);
         saveOffer(2, "offer2", savedPost, null);
         saveOffer(3, "offer3", savedPost, null);
+
         // when
         List<Offer> offerList = offerRepository.findByPost_PostId(savedPost.getPostId());
         // then
-        assertThat(offerList).hasSize(3);
+        assertThat(offerList).hasSize(3)
+                .extracting("contents")
+                .containsExactly("offer1", "offer2", "offer3");
     }
 
     @Test
