@@ -40,7 +40,6 @@ public class OfferService {
     private static final String SELECT_FAIL = "SELECT FAIL";
     private static final String SELECT_END = "SELECT END";
 
-    // 견적 제시 댓글 하나 반환
     public OfferDetailDto showOffer(Long postId, Long offerId) {
         // 1. 해당 게시글 가져오기
         postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
@@ -53,82 +52,76 @@ public class OfferService {
     // 견적 제시 댓글 생성
     @Transactional
     public Long createOffer(Long postId, OfferCreateDto offerCreateDto, Member member) {
-        // 1. 해당 게시글이 마감 전인지 확인
-        Post post = checkNotDonePost(postId);
-        if(!member.isCenter()) {
+        Post post = checkNotDonePost(postId);        // 1. 해당 게시글이 마감 전인지 확인
+        if(member.isClient()) {
             throw new BusinessException(NOT_CENTER);
         }
-        // 2. 이미 견적을 작성한 센터인지 검증
+        // 이미 견적을 작성한 센터인지 검증
         offerRepository.findByPost_PostIdAndCenter_MemberId(postId, member.getMemberId()).ifPresent(offer -> {throw new BusinessException(ALREADY_SUBMITTED);});
-        // 3. 댓글 생성하여 저장하기
+        // 견적 생성하여 저장하기
         Offer offer = offerCreateDto.toEntity(post, member);
         Offer savedOffer = offerRepository.save(offer);
-        // 4. 업데이트된 사항 실시간 전송
+        // 실시간 전송
         sendAboutOfferUpdate(post, OFFER_CREATE, savedOffer);
         offer.setPost(post);
+
         return savedOffer.getOfferId();
     }
 
-    // 견적 제시 댓글 수정
     @Transactional
     public void updateOffer(Long postId, Long offerId, OfferCreateDto offerCreateDto, Member member) {
-        // 1. 해당 게시글이 마감 전인지 확인
         Post post = checkNotDonePost(postId);
-        // 2. 기존 댓글 가져오기
-        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId).orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
-        // 3. 수정 가능한지 검증
-        if(!offer.getCenter().getMemberId().equals(member.getMemberId()))
+
+        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId)
+                .orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
+
+        if (!offer.isWriter(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
-        if(offerCreateDto.getPrice() > offer.getPrice())
+        }
+        if (offerCreateDto.getPrice() > offer.getPrice()) {     //낮은 가격으로만 수정 가능
             throw new BusinessException(ONLY_LOWER_AMOUNT_ALLOWED);
-        // 4. 댓글 수정하기
+        }
+        // 수정
         offer.setPrice(offerCreateDto.getPrice());
         offer.setContents(offerCreateDto.getContents());
-        offerRepository.save(offer);
-        // 5. 업데이트된 사항 실시간 전송
-        sendAboutOfferUpdate(post, OFFER_UPDATE, offer);
+
+        sendAboutOfferUpdate(post, OFFER_UPDATE, offer);         //실시간 전송
     }
 
-    // 견적 제시 댓글 삭제
     @Transactional
     public void deleteOffer(Long postId, Long offerId, Member member) {
-        // 1. 해당 게시글이 마감 전인지 확인
         Post post = checkNotDonePost(postId);
-        // 2. 기존 댓글 가져오기
-        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId).orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
-        // 3. 삭제 가능한지 검증
-        if(!offer.getCenter().getMemberId().equals(member.getMemberId()))
+        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId)
+                .orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
+
+        if (!offer.getCenter().getMemberId().equals(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
-        // 4. 댓글 삭제
+        }
+
         offerRepository.delete(offer);
-        // 5. 업데이트된 사항 실시간 전송
         sendAboutOfferUpdate(post, OFFER_DELETE, offer);
     }
 
-    // 견적 제시 댓글 낙찰
     @Transactional
     public void selectOffer(Long postId, Long offerId, Member member) {
-        // 1. 해당 게시글이 마감 전인지 확인
         Post post = checkNotDonePost(postId);
-        // 3. 게시글 작성자의 접근인지 검증
-        if(!member.getMemberId().equals(post.getMember().getMemberId()))
+        if (!member.getMemberId().equals(post.getMember().getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
-        // 4. 낙찰을 희망하는 댓글 가져오기
-        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId).orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
-        // 5. 댓글 낙찰, 게시글 마감 처리
+        }
+        // 낙찰을 희망하는 댓글 가져오기
+        Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId)
+                .orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
+
         offer.setSelected();
         post.setDone();
-        // 6. 서비스 센터들에게 낙찰 또는 경매 마감 메세지 보내기
+
         sendMessageAfterSelection(postId, post.getMember().getMemberId(), offer.getCenter().getMemberId());
         webSocketService.deletePostRoom(postId);
     }
 
-    // 해당 게시글을 가져오고, 마감 전인지 판단
     private Post checkNotDonePost(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
-        if(post.isDone())
-            throw new BusinessException(CLOSED_POST);
-        return post;
+        return postRepository.findById(postId).filter(post -> !post.isDone())
+                .orElseThrow(() -> new BusinessException(CLOSED_POST));
     }
 
     public void sendAboutOfferUpdate(Post post, String requestType, Offer offer) {
@@ -165,7 +158,6 @@ public class OfferService {
         });
     }
 
-    // 낙찰 처리 후 서비스 센터들에게 낙찰 메세지, 경매 마감 메세지 전송
     private void sendMessageAfterSelection(Long postId, Long writerId, Long selectedMemberId) {
         DataResponse<Boolean> selectSuccess = DataResponse.success(SELECT_SUCCESS, true);
         DataResponse<Boolean> selectFail = DataResponse.success(SELECT_FAIL, false);

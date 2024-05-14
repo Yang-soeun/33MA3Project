@@ -50,4 +50,8 @@ public class Offer {
         this.post = post;
         post.getOffers().add(this);
     }
+
+    public boolean isWriter(Long memberId) {
+        return center.getMemberId().equals(memberId);
+    }
 }
