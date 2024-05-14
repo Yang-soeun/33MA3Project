@@ -6,4 +6,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class AvgPriceDto {
     private double avgPrice;
+    public static AvgPriceDto from(double avgPrice){
+        return new AvgPriceDto(Math.round( avgPrice * 10 ) / 10.0);
+    }
 }

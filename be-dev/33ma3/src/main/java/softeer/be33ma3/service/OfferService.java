@@ -104,7 +104,7 @@ public class OfferService {
     @Transactional
     public void selectOffer(Long postId, Long offerId, Member member) {
         Post post = checkNotDonePost(postId);
-        if (!member.getMemberId().equals(post.getMember().getMemberId())) {
+        if (post.isWriter(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
         }
         // 낙찰을 희망하는 댓글 가져오기
@@ -145,16 +145,15 @@ public class OfferService {
     public void sendAvgPrice2others(Long postId, Long writerId) {
         // 평균 견적 가격 계산하기
         Double avgPrice = offerRepository.findAvgPriceByPostId(postId).orElse(0.0);
-        AvgPriceDto avgPriceDto = new AvgPriceDto(Math.round( avgPrice * 10 ) / 10.0);
+        AvgPriceDto avgPriceDto = new AvgPriceDto(avgPrice);
         // 해당 화면을 보고 있는 유저 명단 가져오기
         Set<Long> memberList = webSocketService.findAllMemberInPost(postId);
-        if(memberList == null)
-            return;
-        memberList.forEach(memberId -> {
-            if(!memberId.equals(writerId)) {
-                webSocketService.sendData2Client(memberId, avgPriceDto);
-            }
-        });
+
+        if (memberList != null) {
+            memberList.stream()
+                    .filter(memberId -> !memberId.equals(writerId))
+                    .forEach(memberId -> webSocketService.sendData2Client(memberId, avgPriceDto));
+        }
     }
 
     private void sendMessageAfterSelection(Long postId, Long writerId, Long selectedMemberId) {
