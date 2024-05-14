@@ -15,8 +15,8 @@ public enum ErrorCode {
 
     //post
     NOT_FOUND_POST(HttpStatus.NOT_FOUND, "존재하지 않는 게시글"),
-    POST_CREATION_DISABLED(HttpStatus.UNAUTHORIZED, "센터는 글 작성이 불가능합니다"),
-    LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "경매 중인 게시글을 보려면 로그인해주세요"),
+    POST_CREATION_DISABLED(HttpStatus.UNAUTHORIZED, "센터는 글 작성이 불가능합니다."),
+    LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "경매 중인 게시글을 보려면 로그인해주세요."),
     PRE_AUCTION_ONLY(HttpStatus.BAD_REQUEST,"경매 시작 전에만 가능합니다."),
 
     //위치

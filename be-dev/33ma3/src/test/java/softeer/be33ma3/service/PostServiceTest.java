@@ -33,11 +33,11 @@ import softeer.be33ma3.repository.post.PostRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static softeer.be33ma3.exception.ErrorCode.LOGIN_REQUIRED;
 import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
 
 @SpringBootTest
@@ -311,7 +311,7 @@ class PostServiceTest {
         //when //then
         assertThatThrownBy(() -> postService.showPost(savedPost.getPostId(), null))
                 .isInstanceOf(BusinessException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.LOGIN_REQUIRED);
+                .hasFieldOrPropertyWithValue("errorCode", LOGIN_REQUIRED);
     }
 
     @Test
@@ -358,27 +358,28 @@ class PostServiceTest {
 
     @Test
     @DisplayName("존재하지 않는 게시글에 대해 조회 요청 시 예외가 발생한다.")
-    void showPost_withNoPost() {
+    void showPostWithNotFoundPost() {
         // given
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> postService.showPost(999L, null));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 게시글");
+        Long unknownPostId = 1000L;
+
+        //when //then
+        assertThatThrownBy(() -> postService.showPost(unknownPostId, null))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_POST);
     }
 
     @Test
     @DisplayName("로그인하지 않은 유저가 경매 중인 게시글 조회 요청 시 예외가 발생한다.")
-    void showPost_logInRequired() {
+    void showPostLogInRequired() {
         // given
         Member member1 = memberRepository.findMemberByLoginId("client1").get();
         Region region = regionRepository.findByRegionName("강남구").get();
         Post post = savePost(region, member1);
+
         // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> postService.showPost(post.getPostId(), null));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("경매 중인 게시글을 보려면 로그인해주세요");
+        assertThatThrownBy(() -> postService.showPost(post.getPostId(), null))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", LOGIN_REQUIRED);
     }
 
     @Test

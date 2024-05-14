@@ -39,6 +39,7 @@ public class PostService {
         List<String> regions = stringCommaParsing(region);
         List<String> repairs = stringCommaParsing(repair);
         List<String> tuneUps = stringCommaParsing(tuneUp);
+
         List<Long> postIds = null;
         if(member != null && member.isCenter()) {   //센터인 경우
             Center center = centerRepository.findByMember_MemberId(member.getMemberId()).orElseThrow(() -> new BusinessException(NOT_FOUND_CENTER));
@@ -48,6 +49,7 @@ public class PostService {
         if(Boolean.TRUE.equals(mine) && member != null && member.isClient()) {
             writerId = member.getMemberId();
         }
+
         List<Post> posts = postRepository.findAllByConditions(writerId, done, regions, repairs, tuneUps, postIds);
         return fromPostList(posts);
     }
