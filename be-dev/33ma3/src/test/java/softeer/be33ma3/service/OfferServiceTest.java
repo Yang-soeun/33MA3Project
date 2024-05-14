@@ -47,20 +47,22 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("원하는 견적 제시 댓글 하나를 반환한다.")
+    @DisplayName("견적 제시 댓글 하나를 반환할 수 있다.")
     void showOffer() {
         // given
-        // post 저장
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        // offer 저장
-        Member center = saveCenter("center1", "center1");
-        Offer offer = saveOffer(10, "offer1", post, center);
-        OfferDetailDto expected = OfferDetailDto.fromEntity(offer, 0.0);
+        Member writer = saveClient("client1", "1234");
+        Post post = savePost(writer);
+        Member center1 = saveCenter("center1", "1234");
+        Member center2 = saveCenter("cetner2", "1234");
+        Offer offer1 = saveOffer(10, "offer1", post, center1);
+        Offer offer2 = saveOffer(100, "offer2", post, center2);
+
         // when
-        OfferDetailDto actual = offerService.showOffer(post.getPostId(), expected.getOfferId());
+        OfferDetailDto offerDetailDto = offerService.showOffer(post.getPostId(), offer1.getOfferId());
+
         // then
-        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+        assertThat(offerDetailDto).extracting("centerName", "price")
+                .containsExactly("center1", 10);
     }
 
     @Test
@@ -312,8 +314,16 @@ class OfferServiceTest {
     }
 
     private Post savePost(Member member) {
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 0,
-                "서울시 강남구", "기스, 깨짐", "오일 교체, 타이어 교체", new ArrayList<>(), "게시글 내용");
+        PostCreateDto postCreateDto = PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(0)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체, 타이어 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 내용")
+                .build();
         return postRepository.save(Post.createPost(postCreateDto, null, member));
     }
 
