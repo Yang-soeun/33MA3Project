@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.domain.Offer;
 import softeer.be33ma3.domain.Post;
@@ -14,7 +13,6 @@ import softeer.be33ma3.dto.request.OfferCreateDto;
 import softeer.be33ma3.dto.request.PostCreateDto;
 import softeer.be33ma3.dto.response.OfferDetailDto;
 import softeer.be33ma3.exception.BusinessException;
-import softeer.be33ma3.repository.ImageRepository;
 import softeer.be33ma3.repository.MemberRepository;
 import softeer.be33ma3.repository.offer.OfferRepository;
 import softeer.be33ma3.repository.post.PostRepository;
@@ -23,11 +21,17 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static softeer.be33ma3.exception.ErrorCode.ALREADY_SUBMITTED;
+import static softeer.be33ma3.exception.ErrorCode.AUTHOR_ONLY_ACCESS;
+import static softeer.be33ma3.exception.ErrorCode.CLOSED_POST;
+import static softeer.be33ma3.exception.ErrorCode.NOT_CENTER;
+import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_OFFER;
+import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
 
 @SpringBootTest
-@Transactional
 @ActiveProfiles("test")
 class OfferServiceTest {
     private final String DEFAULT_PROFILE  = "default_profile.png";
@@ -35,7 +39,6 @@ class OfferServiceTest {
     @Autowired private OfferRepository offerRepository;
     @Autowired private PostRepository postRepository;
     @Autowired private MemberRepository memberRepository;
-    @Autowired private ImageRepository imageRepository;
     @Autowired private OfferService offerService;
 
     @AfterEach
@@ -43,14 +46,13 @@ class OfferServiceTest {
         offerRepository.deleteAllInBatch();
         postRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
-        imageRepository.deleteAllInBatch();
     }
 
     @Test
     @DisplayName("견적 제시 댓글 하나를 반환할 수 있다.")
     void showOffer() {
         // given
-        Member writer = saveClient("client1", "1234");
+        Member writer = saveClient("writer", "1234");
         Post post = savePost(writer);
         Member center1 = saveCenter("center1", "1234");
         Member center2 = saveCenter("cetner2", "1234");
@@ -66,167 +68,182 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 게시글에 대해 견적 제시 댓글 조회 요청 시 예외가 발생한다.")
-    void showOffer_withNoPost() {
+    @DisplayName("존재하지 않는 게시글에 대해 견적 댓글 조회 요청 시 예외가 발생한다.")
+    void showOfferWithNotExistPost() {
         // given
-        // post 저장
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        // offer 저장
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
         Member center = saveCenter("center1", "center1");
         Offer offer = saveOffer(10, "offer1", post, center);
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.showOffer(post.getPostId() + 1, offer.getOfferId()));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 게시글");
+
+        Long notExistPostId = 1000L;
+        //when //then
+        assertThatThrownBy(() -> offerService.showOffer(notExistPostId, offer.getOfferId()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_POST);
     }
 
     @Test
     @DisplayName("존재하지 않는 댓글에 대해 조회 요청 시 예외가 발생한다.")
-    void showOffer_withNoOffer() {
+    void showOfferWithNotExistOffer() {
         // given
-        // post 저장
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.showOffer(post.getPostId(), 999L));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 견적");
+        Member writer = saveClient("writer", "user1");
+        Post post = savePost(writer);
+        Long notExistOfferId = 1000L;
+
+        //when //them
+        assertThatThrownBy(() -> offerService.showOffer(post.getPostId(), notExistOfferId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_OFFER);
     }
 
     @Test
-    @DisplayName("성공적으로 댓글을 작성할 수 있다.")
+    @DisplayName("댓글을 작성할 수 있다.")
     void createOffer() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "create offer");
+
         // when
         Long offerId = offerService.createOffer(post.getPostId(), offerCreateDto, center);
+
         // then
-        Optional<Offer> actual = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offerId);
-        assertThat(actual).isPresent().get().extracting("price", "contents", "post", "center")
-                .containsExactly(10, "create offer", post, center);
+        Offer offer = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offerId).get();
+        assertThat(offer).extracting("price", "contents")
+                .containsExactly(10, "create offer");
     }
 
     @Test
-    @DisplayName("존재하지 않는 게시글에 대해 댓글 작성 요청 시 예외가 발생한다.")
-    void createOffer_withNoPost() {
+    @DisplayName("존재하지 않는 게시글에 대해 댓글 작성 시 예외가 발생한다.")
+    void createOfferWithNotExistPost() {
         // given
         Member center = saveCenter("center1", "center1");
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "create offer");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.createOffer(999L, offerCreateDto, center));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 게시글");
+        Long notExistPostId = 1000L;
+
+        // when //then
+        assertThatThrownBy(() -> offerService.createOffer(notExistPostId, offerCreateDto, center))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_POST);
     }
 
     @Test
     @DisplayName("이미 마감된 게시글에 대해 댓글 작성 요청 시 예외가 발생한다.")
-    void createOffer_withAlreadyDonPost() {
+    void createOfferWithAlreadyDonPost() {
         // given
-        Member member = saveClient("user1", "user1");
-        PostCreateDto postCreateDto = new PostCreateDto("승용차", "제네시스", 0,
-                "서울시 강남구", "기스, 깨짐", "오일 교체, 타이어 교체", new ArrayList<>(), "게시글 내용");
-        Post post = Post.createPost(postCreateDto, null, member);
+        Member writer = saveClient("writer", "1234");
+        PostCreateDto postCreateDto = PostCreateDto.builder()
+                .carType("승용차")
+                .modelName("제네시스")
+                .deadline(0)
+                .location("서울시 강남구")
+                .repairService("기스, 깨짐")
+                .tuneUpService("오일 교체, 타이어 교체")
+                .centers(new ArrayList<>())
+                .contents("게시글 내용")
+                .build();
+
+        Post post = Post.createPost(postCreateDto, null, writer);
         post.setDone();
         Post savedPost = postRepository.save(post);
-        Member center = saveCenter("center1", "center1");
+        Member center = saveCenter("center1", "1234");
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "create offer");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.createOffer(savedPost.getPostId(), offerCreateDto, center));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("마감된 게시글");
+
+        //when //then
+        assertThatThrownBy(() -> offerService.createOffer(savedPost.getPostId(), offerCreateDto, center))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", CLOSED_POST);
     }
 
     @Test
-    @DisplayName("센터가 아닌 일반 유저가 댓글 작성 요청 시 예외가 발생한다.")
-    void createOffer_withNotCenter() {
+    @DisplayName("센터가 아닌 일반 유저가 견적 작성 요청 시 예외가 발생한다.")
+    void createOfferWithNotCenter() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member member2 = saveClient("user2", "user2");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member client = saveClient("client2", "1234");
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "create offer");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.createOffer(post.getPostId(), offerCreateDto, member2));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("센터만 견적을 제시할 수 있습니다.");
+
+        // when //then
+        assertThatThrownBy(() -> offerService.createOffer(post.getPostId(), offerCreateDto, client))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_CENTER);
     }
 
     @Test
     @DisplayName("이미 견적을 작성한 이력이 있는 센터가 댓글 작성 요청 시 예외가 발생한다.")
-    void createOffer_withAlreadyWroteOffer() {
+    void createOfferWithAlreadyWroteOffer() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
         saveOffer(10, "create offer1", post, center);
-        OfferCreateDto offerCreateDto2 = new OfferCreateDto(9, "create offer2");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.createOffer(post.getPostId(), offerCreateDto2, center));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("이미 견적을 작성하였습니다.");
+        OfferCreateDto offerCreateDto = new OfferCreateDto(9, "create offer2");
+
+        // when //then
+        assertThatThrownBy(() -> offerService.createOffer(post.getPostId(), offerCreateDto, center))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ALREADY_SUBMITTED);
     }
 
     @Test
-    @DisplayName("성공적으로 댓글을 수정할 수 있다.")
+    @DisplayName("댓글을 수정할 수 있다.")
     void updateOffer() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
         OfferCreateDto offerCreateDto = new OfferCreateDto(10, "update offer");
+
         // when
         offerService.updateOffer(post.getPostId(), offer.getOfferId(), offerCreateDto, center);
+
         // then
-        Optional<Offer> actual = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId());
-        assertThat(actual).isPresent().get().extracting("price", "contents").containsExactly(10, "update offer");
+        Offer updatedOffer = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId()).get();
+        assertThat(updatedOffer).extracting("price", "contents")
+                .containsExactly(10, "update offer");
     }
 
     @Test
-    @DisplayName("존재하지 않는 댓글에 대해 수정 요청 시 예외가 발생한다.")
-    void updateOffer_withNoOffer() {
+    @DisplayName("존재하지 않는 댓글에 대해 수정시 예외가 발생한다.")
+    void updateOfferWithNotExistOffer() {
         // given
-        Member member = saveClient("user1", "user1");
+        Member member = saveClient("writer", "1234");
         Post post = savePost(member);
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.updateOffer(post.getPostId(), 999L, null, null));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 견적");
+        Long notExistOfferId = 1000L;
+
+        // when //then
+        assertThatThrownBy(() -> offerService.updateOffer(post.getPostId(), notExistOfferId, null, null))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_OFFER);
     }
 
     @Test
     @DisplayName("댓글 작성자가 아닌 유저가 댓글 수정 요청 시 예외가 발생한다.")
-    void updateOffer_withNotWriter() {
+    void updateOfferWithNotWriter() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
         Member center2 = saveCenter("center2", "center2");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.updateOffer(post.getPostId(), offer.getOfferId(), null, center2));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("작성자만 가능합니다.");
+
+        // when //then
+        assertThatThrownBy(() -> offerService.updateOffer(post.getPostId(), offer.getOfferId(), null, center2))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", AUTHOR_ONLY_ACCESS);
     }
 
     @Test
     @DisplayName("기존 댓글의 제시 가격보다 높은 가격으로 수정 요청 시 예외가 발생한다.")
     void updateOffer_biggerPrice() {
         // given
-        Member member = saveClient("user1", "user1");
+        Member member = saveClient("user1", "1234");
         Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
         OfferCreateDto offerCreateDto = new OfferCreateDto(11, "update offer");
         // when
@@ -236,47 +253,52 @@ class OfferServiceTest {
         assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("기존 금액보다 낮은 금액으로만 수정 가능합니다.");
     }
 
+
     @Test
     @DisplayName("성공적으로 댓글을 삭제할 수 있다.")
     void deleteOffer() {
         // given
-        Member member = saveClient("user1", "user1");
+        Member member = saveClient("user1", "1234");
         Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
+
         // when
         offerService.deleteOffer(post.getPostId(), offer.getOfferId(), center);
+
         // then
-        Optional<Offer> actual = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId());
-        assertThat(actual).isEmpty();
+        Optional<Offer> result = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId());
+        assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("댓글 작성자가 아닌 유저가 댓글 삭제 요청 시 예외가 발생한다.")
-    void deleteOffer_withNotWriter() {
+    @DisplayName("댓글 작성자가 아닌 유저가 댓글 삭제시 예외가 발생한다.")
+    void deleteOfferWithNotWriter() {
         // given
-        Member member = saveClient("user1", "user1");
+        Member member = saveClient("writer", "1234");
         Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
-        Member center2 = saveCenter("center2", "center2");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.deleteOffer(post.getPostId(), offer.getOfferId(), center2));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("작성자만 가능합니다.");
+        Member center2 = saveCenter("center2", "1234");
+
+        // when //then
+        assertThatThrownBy(() -> offerService.deleteOffer(post.getPostId(), offer.getOfferId(), center2))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", AUTHOR_ONLY_ACCESS);
     }
 
     @Test
-    @DisplayName("성공적으로 견적 제시 댓글을 낙찰할 수 있다.")
+    @DisplayName("견적 제시 댓글을 낙찰할 수 있다.")
     void selectOffer() {
         // given
-        Member member = saveClient("user1", "user1");
+        Member member = saveClient("writer", "1234");
         Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
+
         // when
         offerService.selectOffer(post.getPostId(), offer.getOfferId(), member);
+
         // then
         Post actualPost = postRepository.findById(post.getPostId()).get();
         Offer actualOffer = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId()).get();
@@ -286,31 +308,32 @@ class OfferServiceTest {
 
     @Test
     @DisplayName("게시글 작성자가 아닌 유저가 댓글 낙찰 요청 시 예외가 발생한다.")
-    void selectOffer_withNotWriter() {
+    void selectOfferWithNotWriter() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "center1");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
-        Member member2 = saveClient("user2", "user2");
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.selectOffer(post.getPostId(), offer.getOfferId(), member2));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("작성자만 가능합니다.");
+        Member member2 = saveClient("user2", "1234");
+
+        // when //then
+        assertThatThrownBy(() -> offerService.selectOffer(post.getPostId(), offer.getOfferId(), member2))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", AUTHOR_ONLY_ACCESS);
     }
 
     @Test
     @DisplayName("존재하지 않는 댓글을 낙찰 요청 시 예외가 발생한다.")
-    void selectOffer_withNoOffer() {
+    void selectOfferWithNoOffer() {
         // given
-        Member member = saveClient("user1", "user1");
-        Post post = savePost(member);
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.selectOffer(post.getPostId(), 999L, member));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("존재하지 않는 견적");
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Long notExistOfferId = 1000L;
+
+        // when //then
+        assertThatThrownBy(() -> offerService.showOffer(post.getPostId(), notExistOfferId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", NOT_FOUND_OFFER);
     }
 
     private Post savePost(Member member) {

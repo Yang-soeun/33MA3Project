@@ -52,7 +52,7 @@ public class OfferService {
     // 견적 제시 댓글 생성
     @Transactional
     public Long createOffer(Long postId, OfferCreateDto offerCreateDto, Member member) {
-        Post post = checkNotDonePost(postId);        // 1. 해당 게시글이 마감 전인지 확인
+        Post post = checkNotDonePost(postId);        // 해당 게시글이 마감 전인지 확인
         if(member.isClient()) {
             throw new BusinessException(NOT_CENTER);
         }
@@ -104,7 +104,7 @@ public class OfferService {
     @Transactional
     public void selectOffer(Long postId, Long offerId, Member member) {
         Post post = checkNotDonePost(postId);
-        if (post.isWriter(member.getMemberId())) {
+        if (!post.isWriter(member.getMemberId())) {
             throw new BusinessException(AUTHOR_ONLY_ACCESS);
         }
         // 낙찰을 희망하는 댓글 가져오기
@@ -119,8 +119,14 @@ public class OfferService {
     }
 
     private Post checkNotDonePost(Long postId) {
-        return postRepository.findById(postId).filter(post -> !post.isDone())
-                .orElseThrow(() -> new BusinessException(CLOSED_POST));
+        return postRepository.findById(postId)
+                .map(post -> {
+                    if (post.isDone()) {
+                        throw new BusinessException(CLOSED_POST);
+                    }
+                    return post;
+                })
+                .orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
     }
 
     public void sendAboutOfferUpdate(Post post, String requestType, Offer offer) {
