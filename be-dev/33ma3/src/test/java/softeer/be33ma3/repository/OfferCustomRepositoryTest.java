@@ -1,4 +1,4 @@
-package softeer.be33ma3.repository.offer;
+package softeer.be33ma3.repository;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,8 +20,7 @@ import softeer.be33ma3.domain.Region;
 import softeer.be33ma3.domain.Review;
 import softeer.be33ma3.dto.request.PostCreateDto;
 import softeer.be33ma3.dto.response.OfferDetailDto;
-import softeer.be33ma3.repository.MemberRepository;
-import softeer.be33ma3.repository.RegionRepository;
+import softeer.be33ma3.repository.offer.OfferRepository;
 import softeer.be33ma3.repository.post.PostRepository;
 import softeer.be33ma3.repository.review.ReviewRepository;
 
@@ -61,7 +60,7 @@ class OfferCustomRepositoryTest {
         memberRepository.deleteAllInBatch();
     }
 
-    @DisplayName("견적 정보와 견적을 작성한 센터의 평균을 알 수 있다. - 가격이 동일한 경우 별점 순으로 내림차순 정렬")
+    @DisplayName("견적 댓글 정보와 견적을 작성한 센터의 평균을 알 수 있다. - 가격이 동일한 경우 별점 순으로 내림차순 정렬")
     @Test
     void findOfferAndAvgPriceByCenterIdWithSamePrice(){
         //given
@@ -91,7 +90,7 @@ class OfferCustomRepositoryTest {
                         tuple("center2", 0.0, 1000));
     }
 
-    @DisplayName("견적 정보와 견적을 작성한 센터의 평균을 알 수 있다. - 가격이 다른 경우 오름차순 정렬")
+    @DisplayName("견적 댓글 정보와 견적 댓글을 작성한 센터의 평균을 알 수 있다. - 가격이 다른 경우 오름차순 정렬")
     @Test
     void findOfferAndAvgPriceByCenterIdWithDiffPrice(){
         //given
