@@ -54,7 +54,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("견적 제시 댓글 하나를 반환할 수 있다.")
+    @DisplayName("견적 댓글 하나를 반환할 수 있다.")
     void showOffer() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -90,7 +90,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 댓글에 대해 조회 요청 시 예외가 발생한다.")
+    @DisplayName("존재하지 않는 견적 댓글에 대해 조회 요청 시 예외가 발생한다.")
     void showOfferWithNotExistOffer() {
         // given
         Member writer = saveClient("writer", "user1");
@@ -104,7 +104,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("댓글을 작성할 수 있다.")
+    @DisplayName("견적 댓글을 작성할 수 있다.")
     void createOffer() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -122,7 +122,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 게시글에 대해 댓글 작성 시 예외가 발생한다.")
+    @DisplayName("존재하지 않는 게시글에 대해 견적 댓글 작성 시 예외가 발생한다.")
     void createOfferWithNotExistPost() {
         // given
         Member center = saveCenter("center1", "center1");
@@ -136,7 +136,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("이미 마감된 게시글에 대해 댓글 작성 요청 시 예외가 발생한다.")
+    @DisplayName("이미 마감된 게시글에 대해 견적 댓글 작성 요청 시 예외가 발생한다.")
     void createOfferWithAlreadyDonPost() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -164,7 +164,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("센터가 아닌 일반 유저가 견적 작성 요청 시 예외가 발생한다.")
+    @DisplayName("센터가 아닌 일반 유저가 견적 댓글 작성 요청 시 예외가 발생한다.")
     void createOfferWithNotCenter() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -179,7 +179,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("이미 견적을 작성한 이력이 있는 센터가 댓글 작성 요청 시 예외가 발생한다.")
+    @DisplayName("이미 견적 댓글을 작성한 이력이 있는 센터가 견적 댓글 작성 요청 시 예외가 발생한다.")
     void createOfferWithAlreadyWroteOffer() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -195,7 +195,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 댓글에 대해 수정시 예외가 발생한다.")
+    @DisplayName("존재하지 않는 견적 댓글에 대해 수정 시 예외가 발생한다.")
     void updateOfferWithNotExistOffer() {
         // given
         Member member = saveClient("writer", "1234");
@@ -209,7 +209,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 작성자가 아닌 유저가 댓글 수정 요청 시 예외가 발생한다.")
+    @DisplayName("견적 댓글 작성자가 아닌 유저가 견적 댓글 수정 요청 시 예외가 발생한다.")
     void updateOfferWithNotWriter() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -224,24 +224,7 @@ class OfferServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", AUTHOR_ONLY_ACCESS);
     }
 
-    @Test
-    @DisplayName("기존 댓글의 제시 가격보다 높은 가격으로 수정 요청 시 예외가 발생한다.")
-    void updateOffer_biggerPrice() {
-        // given
-        Member member = saveClient("user1", "1234");
-        Post post = savePost(member);
-        Member center = saveCenter("center1", "1234");
-        Offer offer = saveOffer(10, "offer1", post, center);
-        OfferCreateDto offerCreateDto = new OfferCreateDto(11, "update offer");
-
-        // when
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> offerService.updateOffer(post.getPostId(), offer.getOfferId(), offerCreateDto, center));
-        // then
-        assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("기존 금액보다 낮은 금액으로만 수정 가능합니다.");
-    }
-
-    @DisplayName("견적 수정 시나리오")
+    @DisplayName("견적 댓글 수정 시나리오")
     @TestFactory
     Collection<DynamicTest> test(){
         //given
@@ -277,7 +260,7 @@ class OfferServiceTest {
 
 
     @Test
-    @DisplayName("성공적으로 댓글을 삭제할 수 있다.")
+    @DisplayName("견적 댓글을 삭제할 수 있다.")
     void deleteOffer() {
         // given
         Member member = saveClient("user1", "1234");
@@ -294,7 +277,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 작성자가 아닌 유저가 댓글 삭제시 예외가 발생한다.")
+    @DisplayName("견적 댓글 작성자가 아닌 유저가 견적 댓글 삭제시 예외가 발생한다.")
     void deleteOfferWithNotWriter() {
         // given
         Member member = saveClient("writer", "1234");
@@ -310,7 +293,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("견적 제시 댓글을 낙찰할 수 있다.")
+    @DisplayName("제시된 견적 댓글 한개를 낙찰할 수 있다.")
     void selectOffer() {
         // given
         Member member = saveClient("writer", "1234");
@@ -329,7 +312,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("게시글 작성자가 아닌 유저가 댓글 낙찰 요청 시 예외가 발생한다.")
+    @DisplayName("게시글 작성자가 아닌 유저가 견적 댓글 낙찰 요청 시 예외가 발생한다.")
     void selectOfferWithNotWriter() {
         // given
         Member writer = saveClient("writer", "1234");
@@ -345,7 +328,7 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 댓글을 낙찰 요청 시 예외가 발생한다.")
+    @DisplayName("존재하지 않는 견적 댓글을 낙찰 요청 시 예외가 발생한다.")
     void selectOfferWithNoOffer() {
         // given
         Member writer = saveClient("writer", "1234");

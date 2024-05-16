@@ -46,10 +46,10 @@ public class OfferService {
         // 2. 해당 댓글 가져오기
         Offer offer = offerRepository.findByPost_PostIdAndOfferId(postId, offerId).orElseThrow(() -> new BusinessException(NOT_FOUND_OFFER));
         Double score = reviewRepository.findAvgScoreByCenterId(offer.getCenter().getMemberId()).orElse(0.0);
+
         return OfferDetailDto.fromEntity(offer, score);
     }
 
-    // 견적 제시 댓글 생성
     @Transactional
     public Long createOffer(Long postId, OfferCreateDto offerCreateDto, Member member) {
         Post post = checkNotDonePost(postId);        // 해당 게시글이 마감 전인지 확인
@@ -129,7 +129,7 @@ public class OfferService {
                 .orElseThrow(() -> new BusinessException(NOT_FOUND_POST));
     }
 
-    public void sendAboutOfferUpdate(Post post, String requestType, Offer offer) {
+    private void sendAboutOfferUpdate(Post post, String requestType, Offer offer) {
         Object data = offer.getOfferId();
         if(!requestType.equals(OFFER_DELETE)) {
             Double score = reviewRepository.findAvgScoreByCenterId(offer.getCenter().getMemberId()).orElse(0.0);
@@ -141,14 +141,14 @@ public class OfferService {
         sendAvgPrice2others(post.getPostId(), post.getMember().getMemberId());
     }
 
-    public void sendData2Writer(Long postId, Long memberId, String requestType, Object data) {
+    private void sendData2Writer(Long postId, Long memberId, String requestType, Object data) {
         DataResponse<?> response = DataResponse.success(requestType, data);
         if(webSocketService.isInPostRoom(postId, memberId)) {
             webSocketService.sendData2Client(memberId, response);
         }
     }
 
-    public void sendAvgPrice2others(Long postId, Long writerId) {
+    private void sendAvgPrice2others(Long postId, Long writerId) {
         // 평균 견적 가격 계산하기
         Double avgPrice = offerRepository.findAvgPriceByPostId(postId).orElse(0.0);
         AvgPriceDto avgPriceDto = new AvgPriceDto(avgPrice);
