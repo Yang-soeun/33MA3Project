@@ -36,7 +36,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("게시글 아이디를 이용하여 해당 게시글의 모든 댓글 목록을 가져올 수 있다.")
+    @DisplayName("게시글 아이디를 이용하여 해당 게시글의 모든 견적 댓글 목록을 가져올 수 있다.")
     void findByPost_PostId() {
         // given
         Post savedPost = savePost(null);
@@ -53,7 +53,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("댓글이 하나도 달리지 않은 게시글의 댓글 목록을 가져올 경우 빈 배열이 반환된다.")
+    @DisplayName("견적 댓글이 하나도 달리지 않은 게시글의 견적 댓글 목록을 가져올 경우 빈 배열이 반환된다.")
     void findByPost_PostId_WithNoOffer() {
         // given
         Post savedPost = savePost(null);
@@ -64,7 +64,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("게시글에서 해당하는 서비스 센터가 작성한 댓글을 반환할 수 있다.")
+    @DisplayName("게시글에서 해당하는 서비스 센터가 작성한 견적 댓글을 반환할 수 있다.")
     void findByPost_PostIdAndCenter_CenterId() {
         // given
         Post savedPost = savePost(null);
@@ -80,7 +80,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("게시글에 해당 센터가 견적을 작성한 이력이 없을 경우 Optional.empty()로 반환된다.")
+    @DisplayName("게시글에 해당 센터가 견적 댓글을 작성한 이력이 없을 경우 Optional.empty()로 반환된다.")
     void findByPost_PostIdAndCenter_CenterId_WithNoOffer() {
         // given
         Post savedPost = savePost(null);
@@ -94,7 +94,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("post id와 offer id를 이용하여 해당 게시글에 달린 해당하는 견적을 하나 반환한다.")
+    @DisplayName("post id와 offer id를 이용하여 해당 게시글에 달린 해당하는 견적 댓글을 하나 반환한다.")
     void findByPost_PostIdAndOfferId() {
         // given
         Post savedPost = savePost(null);
@@ -108,7 +108,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("post id, offer id에 해당하는 견적이 없을 경우 Optional.empty()로 반환된다.")
+    @DisplayName("post id, offer id에 해당하는 견적 댓글이 없을 경우 Optional.empty()로 반환된다.")
     void findByPost_PostIdAndOfferId_WithNoOffer() {
         // given
         Post savedPost = savePost(null);
@@ -153,7 +153,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("해당 게시글에 달린 견적의 평균 제시 가격을 계산하여 반환한다.")
+    @DisplayName("해당 게시글에 달린 견적 댓글의 평균 제시 가격을 계산하여 반환한다.")
     void findAvgPriceByPostId() {
         // given
         Post savedPost = savePost(null);
@@ -174,7 +174,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("해당 게시글에 견적이 달리지 않았을 경우 평균 제시 가격은 Optional.empty()로 반환된다.")
+    @DisplayName("해당 게시글에 견적 댓글이 달리지 않았을 경우 평균 제시 가격은 Optional.empty()로 반환된다.")
     void findAvgPriceByPostId_WithNoOffer() {
         // given
         Post savedPost = savePost(null);
@@ -185,7 +185,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("게시글에 견적을 제시한 모든 센터의 멤버 아이디를 가져온다.")
+    @DisplayName("게시글에 견적 댓글을 제시한 모든 센터의 멤버 아이디를 가져온다.")
     void findCenterMemberIdsByPost_PostId() {
         // given
         Post savedPost = savePost(null);
@@ -207,7 +207,7 @@ class OfferRepositoryTest {
     }
 
     @Test
-    @DisplayName("게시글에 견적을 제시한 모든 센터의 멤버 아이디를 가져올 때, 견적이 없을 경우 빈 배열이 반환된다.")
+    @DisplayName("게시글에 견적 댓글을 제시한 모든 센터의 멤버 아이디를 가져올 때, 견적 댓글이 없을 경우 빈 배열이 반환된다.")
     void findCenterMemberIdsByPost_PostId_WithNoOffer() {
         // given
         Post savedPost = savePost(null);
