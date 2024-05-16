@@ -1,8 +1,12 @@
 package softeer.be33ma3.service;
 
+import java.util.Collection;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,6 +34,7 @@ import static softeer.be33ma3.exception.ErrorCode.CLOSED_POST;
 import static softeer.be33ma3.exception.ErrorCode.NOT_CENTER;
 import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_OFFER;
 import static softeer.be33ma3.exception.ErrorCode.NOT_FOUND_POST;
+import static softeer.be33ma3.exception.ErrorCode.ONLY_LOWER_AMOUNT_ALLOWED;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -77,6 +82,7 @@ class OfferServiceTest {
         Offer offer = saveOffer(10, "offer1", post, center);
 
         Long notExistPostId = 1000L;
+
         //when //then
         assertThatThrownBy(() -> offerService.showOffer(notExistPostId, offer.getOfferId()))
                 .isInstanceOf(BusinessException.class)
@@ -189,25 +195,6 @@ class OfferServiceTest {
     }
 
     @Test
-    @DisplayName("댓글을 수정할 수 있다.")
-    void updateOffer() {
-        // given
-        Member writer = saveClient("writer", "1234");
-        Post post = savePost(writer);
-        Member center = saveCenter("center1", "1234");
-        Offer offer = saveOffer(10, "offer1", post, center);
-        OfferCreateDto offerCreateDto = new OfferCreateDto(10, "update offer");
-
-        // when
-        offerService.updateOffer(post.getPostId(), offer.getOfferId(), offerCreateDto, center);
-
-        // then
-        Offer updatedOffer = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId()).get();
-        assertThat(updatedOffer).extracting("price", "contents")
-                .containsExactly(10, "update offer");
-    }
-
-    @Test
     @DisplayName("존재하지 않는 댓글에 대해 수정시 예외가 발생한다.")
     void updateOfferWithNotExistOffer() {
         // given
@@ -246,11 +233,46 @@ class OfferServiceTest {
         Member center = saveCenter("center1", "1234");
         Offer offer = saveOffer(10, "offer1", post, center);
         OfferCreateDto offerCreateDto = new OfferCreateDto(11, "update offer");
+
         // when
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> offerService.updateOffer(post.getPostId(), offer.getOfferId(), offerCreateDto, center));
         // then
         assertThat(exception.getErrorCode().getErrorMessage()).isEqualTo("기존 금액보다 낮은 금액으로만 수정 가능합니다.");
+    }
+
+    @DisplayName("견적 수정 시나리오")
+    @TestFactory
+    Collection<DynamicTest> test(){
+        //given
+        Member writer = saveClient("writer", "1234");
+        Post post = savePost(writer);
+        Member center = saveCenter("center1", "1234");
+        Offer offer = saveOffer(100, "offer1", post, center);
+
+        return List.of(
+                DynamicTest.dynamicTest("기존 제시 가격 보다 높은 가격으로 수정하면 예외가 발생한다.", () -> {
+                    //given
+                    OfferCreateDto offerCreateDtoWithOverPrice = new OfferCreateDto(150, "update offer");
+
+                    //when //then
+                    assertThatThrownBy(() -> offerService.updateOffer(post.getPostId(), offer.getOfferId(),
+                            offerCreateDtoWithOverPrice, center))
+                            .isInstanceOf(BusinessException.class)
+                            .hasFieldOrPropertyWithValue("errorCode", ONLY_LOWER_AMOUNT_ALLOWED);
+                }),
+                DynamicTest.dynamicTest("기존 제시 가격 보다 낮은 가격으로 수정할 수 있디.", () -> {
+                    //given
+                    OfferCreateDto offerCreateDtoWithUnderPrice = new OfferCreateDto(50, "success update offer");
+
+                    //when
+                    offerService.updateOffer(post.getPostId(), offer.getOfferId(), offerCreateDtoWithUnderPrice, center);
+
+                    //then
+                    Offer updatedOffer = offerRepository.findByPost_PostIdAndOfferId(post.getPostId(), offer.getOfferId()).get();
+                    assertThat(updatedOffer).extracting("price", "contents")
+                            .containsExactly(50, "success update offer");
+                }));
     }
 
 
@@ -347,6 +369,7 @@ class OfferServiceTest {
                 .centers(new ArrayList<>())
                 .contents("게시글 내용")
                 .build();
+
         return postRepository.save(Post.createPost(postCreateDto, null, member));
     }
 
@@ -356,6 +379,7 @@ class OfferServiceTest {
                 .contents(contents)
                 .post(post)
                 .center(center).build();
+
         return offerRepository.save(offer);
     }
 
