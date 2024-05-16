@@ -101,8 +101,6 @@ public class PostService {
         //이미지 삭제
         List<Image> images = post.getImages();
         imageService.deleteImage(images);   //S3에서 이미지 삭제
-        imageRepository.deleteAll(images);  //db에 저장된 이미지 삭제
-
         postRepository.delete(post);    //게시글 삭제
     }
 

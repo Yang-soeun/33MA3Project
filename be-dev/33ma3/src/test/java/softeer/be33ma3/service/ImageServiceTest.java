@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,7 +33,8 @@ class ImageServiceTest {
 
     @Autowired private ImageService imageService;
     @Autowired private ImageRepository imageRepository;
-    @MockBean private S3Service s3Service;
+    @MockBean
+    private S3Service s3Service;
 
     @DisplayName("1개의 이미지를 저장할 수 있다.")
     @Test
@@ -70,6 +72,23 @@ class ImageServiceTest {
         verify(s3Service, times(2)).uploadFile(any(MultipartFile.class));
         verify(s3Service, times(2)).getFileUrl(anyString());
         assertThat(images).hasSize(2);
+    }
+
+    @DisplayName("이미지를 삭제할 수 있다.")
+    @Test
+    void deleteImage(){
+        //given
+        Image image1 = Image.createImage("link1", "fileName1");
+        Image image2 = Image.createImage("link2", "fileName2");
+        Image savedImage1 = imageRepository.save(image1);
+        Image savedImage2 = imageRepository.save(image2);
+
+        //when
+        imageService.deleteImage(List.of(savedImage1, savedImage2));
+
+        //then
+        List<Image> result = imageRepository.findAllById(List.of(savedImage1.getImageId(), savedImage2.getImageId()));
+        assertThat(result).isEmpty();
     }
 
     private MockMultipartFile createImages() throws IOException {
