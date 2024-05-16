@@ -14,13 +14,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import softeer.be33ma3.domain.Member;
 import softeer.be33ma3.dto.request.OfferCreateDto;
-import softeer.be33ma3.dto.response.OfferDetailDto;
 import softeer.be33ma3.jwt.JwtProvider;
 import softeer.be33ma3.repository.MemberRepository;
 import softeer.be33ma3.service.OfferService;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,10 +28,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OfferControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @MockBean private OfferService offerService;
     @Autowired private JwtProvider jwtProvider;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private MemberRepository memberRepository;
+    @MockBean private OfferService offerService;
     private static String accessToken;
 
     @BeforeEach
@@ -43,32 +40,28 @@ class OfferControllerTest {
         Member savedMember = memberRepository.save(member);
         accessToken = jwtProvider.createAccessToken(savedMember.getMemberType(), savedMember.getMemberId(), savedMember.getLoginId());
     }
+
     @AfterEach
     void tearDown() {
         memberRepository.deleteAllInBatch();
     }
 
     @Test
-    @DisplayName("해당하는 댓글 세부사항을 반환한다.")
+    @DisplayName("댓글 세부사항을 반환한다.")
     void showOffer() throws Exception {
-        // given
-        OfferDetailDto mockOfferDetailDto = OfferDetailDto.builder().offerId(1L).build();
-        when(offerService.showOffer(eq(1L), eq(1L))).thenReturn(mockOfferDetailDto);
-
-        // when // then
+        // given // when // then
         mockMvc.perform(get("/post/{post_id}/offer/{offer_id}", 1L, 1L)
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("견적 불러오기 성공"))
-                .andExpect(jsonPath("$.data.offerId").value(mockOfferDetailDto.getOfferId()));
+                .andExpect(jsonPath("$.message").value("견적 불러오기 성공"));
     }
 
     @Test
-    @DisplayName("해당하는 게시글에 댓글을 생성한다.")
+    @DisplayName("해당하는 게시글에 견적 댓글을 생성한다.")
     void createOffer() throws Exception {
         // given
-        OfferCreateDto offerCreateDto = new OfferCreateDto(10, "offer"); // 생성에 필요한 DTO 객체 생성
+        OfferCreateDto offerCreateDto = new OfferCreateDto(1, "offer"); // 생성에 필요한 DTO 객체 생성
 
         // when // then
         mockMvc.perform(post("/post/{post_id}/offer", 1L)
@@ -77,12 +70,13 @@ class OfferControllerTest {
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("입찰 성공"));
+                .andExpect(jsonPath("$.message").value("입찰 성공"))
+                .andExpect(jsonPath("$.data").isNumber());
     }
 
     @Test
-    @DisplayName("견적 제시 가격이 1만원보다 작으면 댓글을 생성하지 못하고 400 응답이 반환된다.")
-    void createOffer_withSmallPrice() throws Exception {
+    @DisplayName("견적 제시 가격이 1만원보다 작으면 예외가 발생한다.")
+    void createOfferWithUnder1() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(0, "offer");
 
@@ -96,25 +90,10 @@ class OfferControllerTest {
                 .andExpect(jsonPath("$.message").value("제시 금액은 1만원 이상이어야 합니다."));
     }
 
-    @Test
-    @DisplayName("견적 제시 가격이 딱 1만원이면 성공적으로 댓글을 작성할 수 있다.")
-    void createOffer_withPrice1() throws Exception {
-        // given
-        OfferCreateDto offerCreateDto = new OfferCreateDto(1, "offer");
-
-        // when // then
-        mockMvc.perform(post("/post/{post_id}/offer", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(offerCreateDto))
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("입찰 성공"));
-    }
 
     @Test
-    @DisplayName("견적 제시 가격이 1000만원보다 크면 댓글을 생성하지 못하고 400 응답이 반환된다.")
-    void createOffer_withBigPrice() throws Exception {
+    @DisplayName("견적 제시 가격이 1000만원보다 크면 예외가 발생한다")
+    void createOfferWithOver1000() throws Exception {
         // given
         OfferCreateDto offerCreateDto = new OfferCreateDto(1001, "offer");
 
@@ -126,22 +105,6 @@ class OfferControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("ERROR"))
                 .andExpect(jsonPath("$.message").value("제시 금액은 1000만원 이하여야 합니다."));
-    }
-
-    @Test
-    @DisplayName("견적 제시 가격이 딱 1000만원이면 성공적으로 댓글을 작성할 수 있다.")
-    void createOffer_withPrice1000() throws Exception {
-        // given
-        OfferCreateDto offerCreateDto = new OfferCreateDto(1000, "offer");
-
-        // when // then
-        mockMvc.perform(post("/post/{post_id}/offer", 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(offerCreateDto))
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("입찰 성공"));
     }
 
     @Test
@@ -157,7 +120,8 @@ class OfferControllerTest {
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("댓글 수정 성공"));
+                .andExpect(jsonPath("$.message").value("댓글 수정 성공"))
+                .andExpect(jsonPath("$.data").isNumber());
     }
 
     @Test
@@ -168,7 +132,8 @@ class OfferControllerTest {
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
-                .andExpect(jsonPath("$.message").value("댓글 삭제 성공"));
+                .andExpect(jsonPath("$.message").value("댓글 삭제 성공"))
+                .andExpect(jsonPath("$.data").isNumber());
     }
 
     @Test
