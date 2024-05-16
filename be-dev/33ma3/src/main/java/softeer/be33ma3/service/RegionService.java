@@ -8,7 +8,6 @@ import softeer.be33ma3.repository.RegionRepository;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +29,7 @@ public class RegionService {
                     .map(r -> Region.builder()
                             .regionName(r)
                             .build())
-                    .collect(Collectors.toList());
+                    .toList();
             regionRepository.saveAll(regions);
         }
     }
